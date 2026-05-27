@@ -222,6 +222,8 @@ jobs:
                         -e "SMTP_PORT=${{ secrets.SMTP_PORT }}" \
                         -e "SMTP_MAIL_FROM=${{ secrets.SMTP_MAIL_FROM }}" \
                         -e "SMTP_SSL=${{ secrets.SMTP_SSL }}" \
+                        -e "GITHUB_CLIENT_ID=${{ secrets.CLOUD_GITHUB_CLIENT_ID }}" \
+                        -e "GITHUB_CLIENT_SECRET=${{ secrets.CLOUD_GITHUB_CLIENT_SECRET }}" \
                         --device /dev/kvm \
                         --name nao-chat \
                         -d getnao/nao:${{ needs.merge.outputs.image-tag }}
