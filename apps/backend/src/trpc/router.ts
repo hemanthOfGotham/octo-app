@@ -10,6 +10,7 @@ import { chatForkRoutes } from './chat-fork.routes';
 import { citationRoutes } from './citation.routes';
 import { contextExplorerRoutes } from './context-explorer.routes';
 import { embedRoutes } from './embed.routes';
+import { favoriteRoutes } from './favorite.routes';
 import { feedbackRoutes } from './feedback.routes';
 import { githubRoutes } from './github.routes';
 import { licenseRoutes } from './license.routes';
@@ -24,6 +25,7 @@ import { sharedChatRoutes } from './shared-chat.routes';
 import { sharedStoryRoutes } from './shared-story.routes';
 import { skillRoutes } from './skill.routes';
 import { storyRoutes } from './story.routes';
+import { storyFolderRoutes } from './story-folder.routes';
 import { systemRoutes } from './system.routes';
 import { transcribeRoutes } from './transcribe.routes';
 import { router } from './trpc';
@@ -41,6 +43,7 @@ export const trpcRouter = router({
 	chatFork: chatForkRoutes,
 	citation: citationRoutes,
 	contextExplorer: contextExplorerRoutes,
+	favorite: favoriteRoutes,
 	feedback: feedbackRoutes,
 	github: githubRoutes,
 	license: licenseRoutes,
@@ -49,6 +52,7 @@ export const trpcRouter = router({
 	project: projectRoutes,
 	storyShare: sharedStoryRoutes,
 	story: storyRoutes,
+	storyFolder: storyFolderRoutes,
 	usage: usageRoutes,
 	user: userRoutes,
 	memory: memoryRoutes,
