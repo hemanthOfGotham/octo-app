@@ -38,10 +38,15 @@
 		"typescript-eslint": "^8.51.0"
 	},
 	"dependencies": {
-		"@boxlite-ai/boxlite": "^0.3.0",
+		"@boxlite-ai/boxlite": "^0.9.5",
 		"@emnapi/core": "^1.9.2",
 		"@emnapi/runtime": "^1.9.2",
 		"@pydantic/monty": "^0.0.7",
 		"depd": "^2.0.0"
+	},
+	"resolutions": {
+		"lodash-es": "^4.18.1",
+		"seroval": "^1.4.1",
+		"uuid": "^11.1.1"
 	}
 }

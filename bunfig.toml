@@ -1,0 +1,5 @@
+# Keep the hoisted node_modules layout (bun >=1.3 defaults new lockfiles to the
+# "isolated" linker, which breaks the Docker build that only ships the root
+# node_modules folder).
+[install]
+linker = "hoisted"

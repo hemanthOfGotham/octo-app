@@ -6,6 +6,7 @@ import { createVertex } from '@ai-sdk/google-vertex';
 import { createVertexAnthropic } from '@ai-sdk/google-vertex/anthropic';
 import { createMistral } from '@ai-sdk/mistral';
 import { createOpenAI } from '@ai-sdk/openai';
+import type { ProviderOptions } from '@ai-sdk/provider-utils';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import type { LlmProvider } from '@nao/shared/types';
 import { createOpenRouter, LanguageModelV3 } from '@openrouter/ai-sdk-provider';
@@ -154,7 +155,7 @@ export const LLM_PROVIDERS: LlmProvidersType = {
 
 export type ProviderModelResult = {
 	model: LanguageModelV3;
-	providerOptions: Partial<{ [P in LlmProvider]: ProviderConfigMap[P] }>;
+	providerOptions: ProviderOptions;
 	contextWindow: number;
 };
 
@@ -169,11 +170,13 @@ export function createProviderModel(
 	const modelConfig = getProviderModelConfig(provider, modelId);
 	const contextWindow = providerConfig.models.find((m) => m.id === modelId)?.contextWindow ?? 200_000;
 
+	// Provider option types (e.g. AnthropicProviderOptions) are not strictly
+	// JSON-compatible in recent @ai-sdk releases, hence the cast.
 	return {
 		model: providerConfig.create(settings, modelId),
 		providerOptions: {
 			[provider]: { ...defaultOptions, ...modelConfig },
-		},
+		} as ProviderOptions,
 		contextWindow,
 	};
 }

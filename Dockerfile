@@ -12,7 +12,7 @@ RUN npm install -g bun
 FROM base AS deps
 WORKDIR /app
 
-COPY package.json package-lock.json bun.lock ./
+COPY package.json package-lock.json bun.lock bunfig.toml ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/shared/package.json ./apps/shared/
@@ -28,7 +28,28 @@ RUN --mount=type=cache,target=/root/.bun/install/cache \
     cd node_modules/@vscode/ripgrep && npm run postinstall
 
 # =============================================================================
-# STAGE 3: Frontend builder
+# STAGE 3: Production-only JS dependencies (shipped in the runtime image)
+# =============================================================================
+# Installed without devDependencies so build-only tooling (vite, rollup,
+# eslint, drizzle-kit, tsup and their bundled esbuild binaries) never ends up
+# in the published image — it is a recurring source of CVE scanner findings.
+FROM base AS prod-deps
+WORKDIR /app
+
+COPY package.json package-lock.json bun.lock bunfig.toml ./
+COPY apps/frontend/package.json ./apps/frontend/
+COPY apps/backend/package.json ./apps/backend/
+COPY apps/shared/package.json ./apps/shared/
+
+RUN --mount=type=cache,target=/root/.bun/install/cache \
+    --mount=type=secret,id=GITHUB_TOKEN \
+    GITHUB_TOKEN="$(cat /run/secrets/GITHUB_TOKEN 2>/dev/null || true)" \
+    bun install --production --ignore-scripts \
+    && GITHUB_TOKEN="$(cat /run/secrets/GITHUB_TOKEN 2>/dev/null || true)" \
+    cd node_modules/@vscode/ripgrep && npm run postinstall
+
+# =============================================================================
+# STAGE 4: Frontend builder
 # =============================================================================
 FROM deps AS frontend-builder
 
@@ -40,7 +61,7 @@ WORKDIR /app/apps/frontend
 RUN npx vite build
 
 # =============================================================================
-# STAGE 4: Python/FastAPI builder
+# STAGE 5: Python/FastAPI builder
 # =============================================================================
 FROM python:3.12-slim AS python-builder
 
@@ -74,7 +95,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --system '.[all]'
 
 # =============================================================================
-# STAGE 5: Runtime image
+# STAGE 6: Runtime image
 # =============================================================================
 FROM python:3.12-slim AS runtime
 
@@ -117,8 +138,8 @@ WORKDIR /app
 # Copy all artifacts with --chown to avoid expensive recursive `chown -R`
 COPY --from=python-builder --chown=nao:nao /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=python-builder --chown=nao:nao /usr/local/bin/nao /usr/local/bin/nao
-COPY --from=deps --chown=nao:nao /app/package.json ./
-COPY --from=deps --chown=nao:nao /app/node_modules ./node_modules
+COPY --from=prod-deps --chown=nao:nao /app/package.json ./
+COPY --from=prod-deps --chown=nao:nao /app/node_modules ./node_modules
 
 # Copy backend and shared source (no build needed — Bun runs TS directly)
 COPY --chown=nao:nao apps/backend ./apps/backend

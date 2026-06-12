@@ -19,6 +19,8 @@
 		"format": "prettier --write ."
 	},
 	"dependencies": {
+		"react": "^19.2.4",
+		"recharts": "2.15.4",
 		"zod": "^4.2.1"
 	},
 	"devDependencies": {
