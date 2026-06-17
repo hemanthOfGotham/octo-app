@@ -208,6 +208,7 @@ class RepositorySyncProvider(SyncProvider):
         project_path: Path | None = None,
         *,
         threads: int = 1,
+        select: list[str] | None = None,
     ) -> SyncResult:
         if not items:
             return SyncResult(provider_name=self.name, items_synced=0)

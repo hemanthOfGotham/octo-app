@@ -86,6 +86,7 @@ class SyncProvider(ABC):
         project_path: Path | None = None,
         *,
         threads: int = 1,
+        select: list[str] | None = None,
     ) -> SyncResult:
         """Sync the items to the output path.
 
@@ -94,6 +95,8 @@ class SyncProvider(ABC):
                 output_path: Path where synced data should be written
                 project_path: Path to the nao project root (for template resolution)
                 threads: Number of worker threads to use
+                select: Optional patterns restricting which items are synced.
+                        Only the databases provider honors this; others ignore it.
 
         Returns:
                 SyncResult with statistics about what was synced

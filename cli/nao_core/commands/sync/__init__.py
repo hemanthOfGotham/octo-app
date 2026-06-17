@@ -39,6 +39,15 @@ def sync(
             help="Number of worker threads to use for sync. Overrides `threads` in nao_config.yaml.",
         ),
     ] = None,
+    select: Annotated[
+        list[str] | None,
+        Parameter(
+            name=["-s", "--select"],
+            help="Sync only the given schemas/tables without deleting the rest. "
+            "Use `schema` to select a whole schema or `schema.table` for one table "
+            "(glob wildcards allowed, e.g. `analytics.dim_*`). Applied on top of include/exclude.",
+        ),
+    ] = None,
     output_dirs: Annotated[dict[str, str] | None, Parameter(show=False)] = None,
     _providers: Annotated[list[ProviderSelection] | None, Parameter(show=False)] = None,
     render_templates: bool = True,
@@ -52,6 +61,9 @@ def sync(
     After syncing providers, renders any Jinja templates (*.j2 files) found in
     the project directory, making the `nao` context object available for
     accessing provider data.
+
+    Use `--select schema` or `--select schema.table` to refresh only part of a
+    database without deleting previously-synced tables outside the selection.
     """
     console.print("\n[bold cyan]🔄 nao sync[/bold cyan]\n")
 
@@ -108,7 +120,9 @@ def sync(
                     )
                     continue
 
-            result = sync_provider.sync(items, output_path, project_path=project_path, threads=resolved_threads)
+            result = sync_provider.sync(
+                items, output_path, project_path=project_path, threads=resolved_threads, select=select
+            )
             results.append(result)
         except Exception as e:
             # Capture error but continue with other providers
