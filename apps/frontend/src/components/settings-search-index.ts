@@ -7,6 +7,7 @@ export interface SettingsSearchEntry {
 	keywords?: string[];
 	adminOnly?: boolean;
 	cloudHidden?: boolean;
+	cloudOnly?: boolean;
 	licenseRequired?: boolean;
 }
 
@@ -87,6 +88,15 @@ export const settingsSearchIndex: SettingsSearchEntry[] = [
 		title: 'Import from GitHub',
 		description: 'Connect your GitHub account and import a repository as a project.',
 		keywords: ['github', 'repository', 'repo', 'import', 'git', 'integration', 'clone'],
+	},
+	{
+		page: '/settings/organization',
+		pageLabel: 'Organization',
+		title: 'Sign-in domains',
+		description:
+			'Users who sign in with Google using one of these verified email domains automatically join this organization.',
+		keywords: ['sso', 'google', 'domain', 'email domain', 'allowlist', 'auto join', 'workspace', 'verified'],
+		cloudOnly: true,
 	},
 	{
 		page: '/settings/organization',
