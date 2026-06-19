@@ -14,6 +14,7 @@ from nao_core import __version__
 from nao_core.config import NaoConfig, resolve_project_path
 from nao_core.config.llm import PROVIDER_AUTH, LLMProvider
 from nao_core.mode import MODE
+from nao_core.native_runtimes import build_node_path, ensure_runtimes, is_download_skipped
 from nao_core.tracking import track_command
 
 console = Console()
@@ -208,6 +209,16 @@ def chat(
     try:
         env = os.environ.copy()
         port = validate_port(port)
+
+        # Download the heavy native runtimes (code sandbox, python interpreter)
+        # on first use, then expose them to the standalone server via NODE_PATH.
+        # They are not bundled in the wheel to keep its size small. Set
+        # NAO_SKIP_RUNTIME_DOWNLOAD=1 to opt out (those tools stay disabled).
+        if not is_download_skipped():
+            ensure_runtimes()
+        node_path = build_node_path(env.get("NODE_PATH"))
+        if node_path:
+            env["NODE_PATH"] = node_path
 
         auth_secret = ensure_auth_secret(bin_dir)
         if auth_secret:

@@ -84,7 +84,13 @@ def _find_platform_deps(project_root: Path) -> list[str]:
 
     Returns ALL platform deps (not just missing ones) because npm's tree
     reconciliation removes previously-installed unlocked packages on each run.
+
+    The heavy code-execution runtimes (@boxlite-ai/boxlite, @pydantic/monty) are
+    deliberately excluded — they are not bundled in the wheel and are downloaded
+    on demand by nao_core.native_runtimes, so installing them here would only
+    slow the build down.
     """
+    excluded_prefixes = ("@boxlite-ai/", "@pydantic/monty-")
     platform_markers = {
         "darwin-arm64": ["darwin-arm64"],
         "darwin-x64": ["darwin-x64"],
@@ -115,6 +121,8 @@ def _find_platform_deps(project_root: Path) -> list[str]:
         except (json.JSONDecodeError, OSError):
             continue
         for dep in meta.get("optionalDependencies", {}):
+            if dep.startswith(excluded_prefixes):
+                continue
             if any(m in dep for m in markers):
                 deps.append(dep)
 
@@ -270,59 +278,37 @@ def get_native_platform_suffix() -> str | None:
 
 
 def bundle_native_packages(project_root: Path, output_dir: Path) -> None:
-    """Copy NAPI-RS native addons into node_modules/ next to the binary.
+    """Copy the lightweight JS wrappers for NAPI-RS native addons.
 
     Both @boxlite-ai/boxlite and @pydantic/monty are externalized from the Bun
     standalone build because they load platform-specific .node files at runtime.
-    """
-    suffix = get_native_platform_suffix()
-    if suffix is None:
-        print(f"   ⚠️  Unsupported platform {sys.platform}/{platform.machine()} — skipping native addons")
-        return
 
+    Only the small JS wrappers are bundled here — their heavy platform binaries
+    (~70MB for boxlite, ~12MB for monty) are downloaded on first use into
+    ~/.nao/runtimes by nao_core.native_runtimes and resolved via NODE_PATH. This
+    keeps each published wheel ~80MB smaller. The wrappers gracefully disable the
+    corresponding tool when the binary is missing.
+    """
     nm_root = project_root / "node_modules"
     out_nm = output_dir / "node_modules"
 
-    packages_to_copy: list[tuple[str, str]] = [
-        ("@pydantic/monty", "@pydantic/monty"),
-    ]
+    # Only the tiny wrappers ship in the wheel; the platform binaries are fetched
+    # on demand. Keeping the wrappers lets require() resolve them via NODE_PATH.
+    packages_to_copy = ["@pydantic/monty", "@boxlite-ai/boxlite"]
 
-    # boxlite has no native win32 binaries (works on Windows only through WSL)
-    if sys.platform != "win32":
-        packages_to_copy = [
-            ("@boxlite-ai/boxlite", "@boxlite-ai/boxlite"),
-            (f"@boxlite-ai/boxlite-{suffix}", f"@boxlite-ai/boxlite-{suffix}"),
-        ] + packages_to_copy
-    else:
-        print("   Skipping @boxlite-ai/boxlite (no native win32 binaries — use WSL for sandbox support)")
-
-    # monty's platform package may be nested inside its own node_modules
-    monty_platform_pkg = f"@pydantic/monty-{suffix}"
-    monty_nested = nm_root / "@pydantic" / "monty" / "node_modules" / monty_platform_pkg
-    monty_hoisted = nm_root / monty_platform_pkg
-
-    if monty_nested.exists():
-        # Keep the nested structure so require() resolves correctly
-        packages_to_copy.append(
-            (
-                str(monty_nested.relative_to(nm_root)),
-                f"@pydantic/monty/node_modules/{monty_platform_pkg}",
-            )
-        )
-    elif monty_hoisted.exists():
-        packages_to_copy.append((monty_platform_pkg, monty_platform_pkg))
-
-    for src_rel, dst_rel in packages_to_copy:
-        src = nm_root / src_rel
-        dst = out_nm / dst_rel
+    for pkg in packages_to_copy:
+        src = nm_root / pkg
+        dst = out_nm / pkg
         if not src.exists():
-            print(f"   ⚠️  {src_rel} not found — skipping")
+            print(f"   ⚠️  {pkg} not found — skipping")
             continue
         if dst.exists():
             shutil.rmtree(dst)
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(src, dst)
-        print(f"   {dst_rel}")
+        # Skip any nested platform binaries that npm may have hoisted into the
+        # wrapper's own node_modules so they never leak into the wheel.
+        shutil.copytree(src, dst, ignore=shutil.ignore_patterns("node_modules"))
+        print(f"   {pkg}")
 
 
 def build_server(project_root: Path, output_dir: Path) -> None:
