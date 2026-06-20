@@ -22,6 +22,7 @@ import { memoryRoutes } from './memory.routes';
 import { organizationRoutes } from './organization.routes';
 import { posthogRoutes } from './posthog.routes';
 import { projectRoutes } from './project.routes';
+import { ruleRoutes } from './rule.routes';
 import { sharedChatRoutes } from './shared-chat.routes';
 import { sharedStoryRoutes } from './shared-story.routes';
 import { skillRoutes } from './skill.routes';
@@ -58,6 +59,7 @@ export const trpcRouter = router({
 	usage: usageRoutes,
 	user: userRoutes,
 	memory: memoryRoutes,
+	rule: ruleRoutes,
 	organization: organizationRoutes,
 	authConfig: authConfigRoutes,
 	account: accountRoutes,
