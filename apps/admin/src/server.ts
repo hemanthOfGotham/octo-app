@@ -14,7 +14,8 @@ export function buildServer(): FastifyInstance {
 	const app = Fastify({ logger: true });
 
 	const dashboardHtml = loadDashboardHtml();
-	const serveDashboard = async (_request: unknown, reply: FastifyReply) => reply.type('text/html').send(dashboardHtml);
+	const serveDashboard = async (_request: unknown, reply: FastifyReply) =>
+		reply.type('text/html').send(dashboardHtml);
 
 	app.get('/', serveDashboard);
 	app.get('/admin', serveDashboard);

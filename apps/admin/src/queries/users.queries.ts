@@ -1,7 +1,7 @@
 import { db } from '@nao/backend/db';
 import type { User } from '@nao/backend/schema';
 import s from '@nao/backend/schema';
-import { desc, eq, inArray, SQL,sql } from 'drizzle-orm';
+import { desc, eq, inArray, SQL, sql } from 'drizzle-orm';
 
 export interface AdminUserOrg {
 	id: string;

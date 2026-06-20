@@ -31,7 +31,14 @@
 				background: var(--bg);
 				color: var(--text);
 				font-family:
-					ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					Roboto,
+					Helvetica,
+					Arial,
+					sans-serif;
 				font-size: 14px;
 			}
 			a {
@@ -425,7 +432,12 @@
 			<!-- Users -->
 			<section data-panel="users" class="hidden">
 				<div class="toolbar">
-					<input id="user-search" type="text" placeholder="Search by email or name…" style="min-width: 280px" />
+					<input
+						id="user-search"
+						type="text"
+						placeholder="Search by email or name…"
+						style="min-width: 280px"
+					/>
 					<button class="btn small" id="user-refresh">Refresh</button>
 					<span class="muted" id="user-count"></span>
 				</div>
@@ -525,8 +537,8 @@
 		</div>
 
 		<script>
-			const TOKEN_KEY = "nao_admin_token";
-			let token = localStorage.getItem(TOKEN_KEY) || new URLSearchParams(location.search).get("token") || "";
+			const TOKEN_KEY = 'nao_admin_token';
+			let token = localStorage.getItem(TOKEN_KEY) || new URLSearchParams(location.search).get('token') || '';
 			let eventSource = null;
 
 			const $ = (sel) => document.querySelector(sel);
@@ -542,7 +554,11 @@
 			async function api(path, options = {}) {
 				const res = await fetch(path, {
 					...options,
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(options.headers || {}) },
+					headers: {
+						'Content-Type': 'application/json',
+						Authorization: `Bearer ${token}`,
+						...(options.headers || {}),
+					},
 				});
 				if (res.status === 401 || res.status === 503) {
 					throw { unauthorized: true, status: res.status };
@@ -557,83 +573,115 @@
 				return new Intl.NumberFormat().format(n ?? 0);
 			}
 			function fmtDate(d) {
-				if (!d) return "—";
+				if (!d) return '—';
 				const date = new Date(d);
 				return date.toLocaleString(undefined, {
-					month: "short",
-					day: "numeric",
-					hour: "2-digit",
-					minute: "2-digit",
+					month: 'short',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit',
 				});
 			}
 			function escapeHtml(s) {
-				return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+				return String(s ?? '').replace(
+					/[&<>"']/g,
+					(c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+				);
 			}
 
 			/* ---------- Auth flow ---------- */
 			function showLogin(message) {
-				$("#login").classList.remove("hidden");
-				$("#app").style.display = "none";
-				$("#login-error").textContent = message || "";
+				$('#login').classList.remove('hidden');
+				$('#app').style.display = 'none';
+				$('#login-error').textContent = message || '';
 				if (eventSource) {
 					eventSource.close();
 					eventSource = null;
 				}
 			}
 			function showApp() {
-				$("#login").classList.add("hidden");
-				$("#app").style.display = "block";
+				$('#login').classList.add('hidden');
+				$('#app').style.display = 'block';
 			}
 
-			$("#login-form").addEventListener("submit", async (e) => {
+			$('#login-form').addEventListener('submit', async (e) => {
 				e.preventDefault();
-				token = $("#token").value.trim();
+				token = $('#token').value.trim();
 				if (!token) return;
 				try {
-					await api("/api/stats");
+					await api('/api/stats');
 					localStorage.setItem(TOKEN_KEY, token);
 					boot();
 				} catch (err) {
-					$("#login-error").textContent = err.unauthorized ? "Invalid or missing admin token." : "Could not reach the server.";
+					$('#login-error').textContent = err.unauthorized
+						? 'Invalid or missing admin token.'
+						: 'Could not reach the server.';
 				}
 			});
 
-			$("#logout").addEventListener("click", () => {
+			$('#logout').addEventListener('click', () => {
 				localStorage.removeItem(TOKEN_KEY);
-				token = "";
-				showLogin("");
+				token = '';
+				showLogin('');
 			});
 
 			/* ---------- Tabs ---------- */
 			const loaders = {};
 			function activateTab(tab) {
-				document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
-				document.querySelectorAll("[data-panel]").forEach((p) => p.classList.toggle("hidden", p.dataset.panel !== tab));
+				document
+					.querySelectorAll('#tabs button')
+					.forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+				document
+					.querySelectorAll('[data-panel]')
+					.forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== tab));
 				if (loaders[tab]) loaders[tab]();
 			}
-			document.querySelectorAll("#tabs button").forEach((btn) => {
-				btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+			document.querySelectorAll('#tabs button').forEach((btn) => {
+				btn.addEventListener('click', () => activateTab(btn.dataset.tab));
 			});
 
 			/* ---------- Stats ---------- */
 			const CARD_DEFS = [
-				{ key: "users", label: "Users", value: (s) => s.users.total, sub: (s) => `<b>${fmtNum(s.users.verified)}</b> verified · <b>${fmtNum(s.users.unverified)}</b> pending` },
-				{ key: "active", label: "Active users · 24h", value: (s) => s.activeUsers24h, sub: (s) => `<b>${fmtNum(s.newUsers24h)}</b> new in 24h` },
-				{ key: "orgs", label: "Organizations", value: (s) => s.organizations, sub: () => "" },
-				{ key: "projects", label: "Projects", value: (s) => s.projects, sub: () => "" },
-				{ key: "chats", label: "Chats", value: (s) => s.chats, sub: () => "" },
-				{ key: "messages", label: "Messages", value: (s) => s.messages.total, sub: (s) => `<b>${fmtNum(s.messages.last24h)}</b> in 24h · <b>${fmtNum(s.messages.last7d)}</b> in 7d` },
-				{ key: "errors", label: "Errors · 24h", value: (s) => s.errors24h, sub: () => "messages + logs", alert: true },
+				{
+					key: 'users',
+					label: 'Users',
+					value: (s) => s.users.total,
+					sub: (s) =>
+						`<b>${fmtNum(s.users.verified)}</b> verified · <b>${fmtNum(s.users.unverified)}</b> pending`,
+				},
+				{
+					key: 'active',
+					label: 'Active users · 24h',
+					value: (s) => s.activeUsers24h,
+					sub: (s) => `<b>${fmtNum(s.newUsers24h)}</b> new in 24h`,
+				},
+				{ key: 'orgs', label: 'Organizations', value: (s) => s.organizations, sub: () => '' },
+				{ key: 'projects', label: 'Projects', value: (s) => s.projects, sub: () => '' },
+				{ key: 'chats', label: 'Chats', value: (s) => s.chats, sub: () => '' },
+				{
+					key: 'messages',
+					label: 'Messages',
+					value: (s) => s.messages.total,
+					sub: (s) =>
+						`<b>${fmtNum(s.messages.last24h)}</b> in 24h · <b>${fmtNum(s.messages.last7d)}</b> in 7d`,
+				},
+				{
+					key: 'errors',
+					label: 'Errors · 24h',
+					value: (s) => s.errors24h,
+					sub: () => 'messages + logs',
+					alert: true,
+				},
 			];
 
 			function renderCards(stats) {
-				const container = $("#stat-cards");
-				container.innerHTML = "";
+				const container = $('#stat-cards');
+				container.innerHTML = '';
 				for (const def of CARD_DEFS) {
-					const card = el("div", { className: "card" + (def.alert && def.value(stats) > 0 ? " alert" : "") });
-					card.append(el("div", { className: "k" }, def.label));
-					card.append(el("div", { className: "v" }, fmtNum(def.value(stats))));
-					const sub = el("div", { className: "sub" });
+					const card = el('div', { className: 'card' + (def.alert && def.value(stats) > 0 ? ' alert' : '') });
+					card.append(el('div', { className: 'k' }, def.label));
+					card.append(el('div', { className: 'v' }, fmtNum(def.value(stats))));
+					const sub = el('div', { className: 'sub' });
 					sub.innerHTML = def.sub(stats);
 					card.append(sub);
 					container.append(card);
@@ -641,16 +689,16 @@
 			}
 
 			function renderChart(series) {
-				const chart = $("#chart");
-				chart.innerHTML = "";
+				const chart = $('#chart');
+				chart.innerHTML = '';
 				const max = Math.max(1, ...series.map((p) => p.messages));
 				for (const point of series) {
-					const col = el("div", { className: "bar-col" });
-					col.append(el("div", { className: "bar-val" }, fmtNum(point.messages)));
-					const bar = el("div", { className: "bar" });
+					const col = el('div', { className: 'bar-col' });
+					col.append(el('div', { className: 'bar-val' }, fmtNum(point.messages)));
+					const bar = el('div', { className: 'bar' });
 					bar.style.height = `${Math.round((point.messages / max) * 100)}%`;
 					col.append(bar);
-					col.append(el("div", { className: "bar-label" }, point.date.slice(5)));
+					col.append(el('div', { className: 'bar-label' }, point.date.slice(5)));
 					chart.append(col);
 				}
 			}
@@ -667,12 +715,12 @@
 				eventSource.onerror = () => setLive(false);
 			}
 			function setLive(on) {
-				$("#live-dot").classList.toggle("on", on);
-				$("#live-text").textContent = on ? "live" : "reconnecting…";
+				$('#live-dot').classList.toggle('on', on);
+				$('#live-text').textContent = on ? 'live' : 'reconnecting…';
 			}
 
 			loaders.overview = async () => {
-				const stats = await guard(() => api("/api/stats"));
+				const stats = await guard(() => api('/api/stats'));
 				if (!stats) return;
 				renderCards(stats);
 				renderChart(stats.series);
@@ -681,49 +729,62 @@
 			/* ---------- Users ---------- */
 			let userSearchTimer = null;
 			loaders.users = async () => {
-				const search = $("#user-search").value.trim();
-				const users = await guard(() => api(`/api/users?limit=200${search ? `&search=${encodeURIComponent(search)}` : ""}`));
+				const search = $('#user-search').value.trim();
+				const users = await guard(() =>
+					api(`/api/users?limit=200${search ? `&search=${encodeURIComponent(search)}` : ''}`),
+				);
 				if (!users) return;
-				$("#user-count").textContent = `${users.length} user(s)`;
-				const body = $("#users-body");
-				body.innerHTML = "";
+				$('#user-count').textContent = `${users.length} user(s)`;
+				const body = $('#users-body');
+				body.innerHTML = '';
 				if (users.length === 0) {
-					body.append(emptyRow(5, "No users found."));
+					body.append(emptyRow(5, 'No users found.'));
 					return;
 				}
 				for (const u of users) {
-					const tr = el("tr");
-					tr.append(el("td", {}, userCell(u)));
-					tr.append(el("td", {}, verifiedPill(u.emailVerified)));
-					tr.append(el("td", {}, orgChips(u.organizations)));
-					tr.append(el("td", { className: "muted" }, fmtDate(u.createdAt)));
-					tr.append(el("td", {}, verifyButton(u)));
+					const tr = el('tr');
+					tr.append(el('td', {}, userCell(u)));
+					tr.append(el('td', {}, verifiedPill(u.emailVerified)));
+					tr.append(el('td', {}, orgChips(u.organizations)));
+					tr.append(el('td', { className: 'muted' }, fmtDate(u.createdAt)));
+					tr.append(el('td', {}, verifyButton(u)));
 					body.append(tr);
 				}
 			};
 
 			function userCell(u) {
-				const wrap = el("div");
-				wrap.append(el("div", {}, u.name || "(no name)"));
-				wrap.append(el("div", { className: "muted mono" }, u.email));
+				const wrap = el('div');
+				wrap.append(el('div', {}, u.name || '(no name)'));
+				wrap.append(el('div', { className: 'muted mono' }, u.email));
 				return wrap;
 			}
 			function verifiedPill(verified) {
-				return el("span", { className: `pill ${verified ? "green" : "amber"}` }, verified ? "verified" : "unverified");
+				return el(
+					'span',
+					{ className: `pill ${verified ? 'green' : 'amber'}` },
+					verified ? 'verified' : 'unverified',
+				);
 			}
 			function orgChips(orgs) {
-				if (!orgs || orgs.length === 0) return el("span", { className: "muted" }, "—");
-				const wrap = el("div");
-				for (const o of orgs) wrap.append(el("span", { className: "chip" }, `${o.name} · ${o.role}`));
+				if (!orgs || orgs.length === 0) return el('span', { className: 'muted' }, '—');
+				const wrap = el('div');
+				for (const o of orgs) wrap.append(el('span', { className: 'chip' }, `${o.name} · ${o.role}`));
 				return wrap;
 			}
 			function verifyButton(u) {
-				const btn = el("button", { className: "btn small " + (u.emailVerified ? "ghost" : "") }, u.emailVerified ? "Unverify email" : "Verify email");
-				btn.addEventListener("click", async () => {
+				const btn = el(
+					'button',
+					{ className: 'btn small ' + (u.emailVerified ? 'ghost' : '') },
+					u.emailVerified ? 'Unverify email' : 'Verify email',
+				);
+				btn.addEventListener('click', async () => {
 					btn.disabled = true;
-					btn.textContent = "Saving…";
+					btn.textContent = 'Saving…';
 					try {
-						await api(`/api/users/${u.id}/email-verification`, { method: "POST", body: JSON.stringify({ verified: !u.emailVerified }) });
+						await api(`/api/users/${u.id}/email-verification`, {
+							method: 'POST',
+							body: JSON.stringify({ verified: !u.emailVerified }),
+						});
 						loaders.users();
 					} catch (err) {
 						handleError(err);
@@ -733,115 +794,115 @@
 				return btn;
 			}
 
-			$("#user-refresh").addEventListener("click", () => loaders.users());
-			$("#user-search").addEventListener("input", () => {
+			$('#user-refresh').addEventListener('click', () => loaders.users());
+			$('#user-search').addEventListener('input', () => {
 				clearTimeout(userSearchTimer);
 				userSearchTimer = setTimeout(() => loaders.users(), 300);
 			});
 
 			/* ---------- Orgs ---------- */
 			loaders.orgs = async () => {
-				const orgs = await guard(() => api("/api/orgs?limit=200"));
+				const orgs = await guard(() => api('/api/orgs?limit=200'));
 				if (!orgs) return;
-				$("#org-count").textContent = `${orgs.length} organization(s)`;
-				const body = $("#orgs-body");
-				body.innerHTML = "";
+				$('#org-count').textContent = `${orgs.length} organization(s)`;
+				const body = $('#orgs-body');
+				body.innerHTML = '';
 				if (orgs.length === 0) {
-					body.append(emptyRow(6, "No organizations found."));
+					body.append(emptyRow(6, 'No organizations found.'));
 					return;
 				}
 				for (const o of orgs) {
-					const tr = el("tr");
-					tr.append(el("td", {}, orgNameCell(o)));
-					tr.append(el("td", { className: "mono muted" }, o.slug));
-					tr.append(el("td", {}, fmtNum(o.memberCount)));
-					tr.append(el("td", {}, fmtNum(o.projectCount)));
-					tr.append(el("td", { className: "muted" }, o.googleAuthDomains || "—"));
-					tr.append(el("td", { className: "muted" }, fmtDate(o.createdAt)));
+					const tr = el('tr');
+					tr.append(el('td', {}, orgNameCell(o)));
+					tr.append(el('td', { className: 'mono muted' }, o.slug));
+					tr.append(el('td', {}, fmtNum(o.memberCount)));
+					tr.append(el('td', {}, fmtNum(o.projectCount)));
+					tr.append(el('td', { className: 'muted' }, o.googleAuthDomains || '—'));
+					tr.append(el('td', { className: 'muted' }, fmtDate(o.createdAt)));
 					body.append(tr);
 				}
 			};
 			function orgNameCell(o) {
-				const wrap = el("div");
-				wrap.append(el("div", {}, o.name));
-				wrap.append(el("div", { className: "muted mono" }, o.id));
+				const wrap = el('div');
+				wrap.append(el('div', {}, o.name));
+				wrap.append(el('div', { className: 'muted mono' }, o.id));
 				return wrap;
 			}
-			$("#org-refresh").addEventListener("click", () => loaders.orgs());
+			$('#org-refresh').addEventListener('click', () => loaders.orgs());
 
 			/* ---------- Logs ---------- */
 			loaders.logs = async () => {
-				const level = $("#log-level").value;
-				const project = $("#log-project").value.trim();
-				const org = $("#log-org").value.trim();
-				const params = new URLSearchParams({ limit: "200" });
-				if (level) params.set("level", level);
-				if (project) params.set("projectId", project);
-				if (org) params.set("orgId", org);
+				const level = $('#log-level').value;
+				const project = $('#log-project').value.trim();
+				const org = $('#log-org').value.trim();
+				const params = new URLSearchParams({ limit: '200' });
+				if (level) params.set('level', level);
+				if (project) params.set('projectId', project);
+				if (org) params.set('orgId', org);
 				const logs = await guard(() => api(`/api/logs?${params}`));
 				if (!logs) return;
-				$("#log-count").textContent = `${logs.length} log(s)`;
-				const body = $("#logs-body");
-				body.innerHTML = "";
+				$('#log-count').textContent = `${logs.length} log(s)`;
+				const body = $('#logs-body');
+				body.innerHTML = '';
 				if (logs.length === 0) {
-					body.append(emptyRow(5, "No logs found."));
+					body.append(emptyRow(5, 'No logs found.'));
 					return;
 				}
 				for (const l of logs) {
-					const tr = el("tr");
-					tr.append(el("td", { className: "muted" }, fmtDate(l.createdAt)));
-					tr.append(el("td", {}, levelPill(l.level)));
-					tr.append(el("td", { className: "muted" }, l.source));
-					tr.append(el("td", { className: "msg-cell" }, l.message));
-					tr.append(el("td", {}, scopeCell(l.projectName, l.orgName)));
+					const tr = el('tr');
+					tr.append(el('td', { className: 'muted' }, fmtDate(l.createdAt)));
+					tr.append(el('td', {}, levelPill(l.level)));
+					tr.append(el('td', { className: 'muted' }, l.source));
+					tr.append(el('td', { className: 'msg-cell' }, l.message));
+					tr.append(el('td', {}, scopeCell(l.projectName, l.orgName)));
 					body.append(tr);
 				}
 			};
 			function levelPill(level) {
-				const map = { error: "red", warn: "amber", info: "blue", debug: "gray" };
-				return el("span", { className: `pill ${map[level] || "gray"}` }, level);
+				const map = { error: 'red', warn: 'amber', info: 'blue', debug: 'gray' };
+				return el('span', { className: `pill ${map[level] || 'gray'}` }, level);
 			}
 			function scopeCell(project, org) {
-				const wrap = el("div");
-				wrap.append(el("div", {}, project || el("span", { className: "muted" }, "global")));
-				if (org) wrap.append(el("div", { className: "muted" }, org));
+				const wrap = el('div');
+				wrap.append(el('div', {}, project || el('span', { className: 'muted' }, 'global')));
+				if (org) wrap.append(el('div', { className: 'muted' }, org));
 				return wrap;
 			}
-			$("#log-refresh").addEventListener("click", () => loaders.logs());
-			$("#log-level").addEventListener("change", () => loaders.logs());
+			$('#log-refresh').addEventListener('click', () => loaders.logs());
+			$('#log-level').addEventListener('change', () => loaders.logs());
 
 			/* ---------- Errors ---------- */
 			loaders.errors = async () => {
-				const project = $("#err-project").value.trim();
-				const org = $("#err-org").value.trim();
-				const params = new URLSearchParams({ limit: "200" });
-				if (project) params.set("projectId", project);
-				if (org) params.set("orgId", org);
+				const project = $('#err-project').value.trim();
+				const org = $('#err-org').value.trim();
+				const params = new URLSearchParams({ limit: '200' });
+				if (project) params.set('projectId', project);
+				if (org) params.set('orgId', org);
 				const errors = await guard(() => api(`/api/errors?${params}`));
 				if (!errors) return;
-				$("#err-count").textContent = `${errors.length} error(s)`;
-				const body = $("#errors-body");
-				body.innerHTML = "";
+				$('#err-count').textContent = `${errors.length} error(s)`;
+				const body = $('#errors-body');
+				body.innerHTML = '';
 				if (errors.length === 0) {
-					body.append(emptyRow(5, "No errors found."));
+					body.append(emptyRow(5, 'No errors found.'));
 					return;
 				}
 				for (const e of errors) {
-					const tr = el("tr");
-					tr.append(el("td", { className: "muted" }, fmtDate(e.createdAt)));
-					tr.append(el("td", {}, el("span", { className: "pill red" }, e.source)));
-					tr.append(el("td", { className: "msg-cell" }, e.message));
-					tr.append(el("td", {}, scopeCell(e.projectName, e.orgName)));
-					tr.append(el("td", { className: "muted mono" }, e.userEmail || "—"));
+					const tr = el('tr');
+					tr.append(el('td', { className: 'muted' }, fmtDate(e.createdAt)));
+					tr.append(el('td', {}, el('span', { className: 'pill red' }, e.source)));
+					tr.append(el('td', { className: 'msg-cell' }, e.message));
+					tr.append(el('td', {}, scopeCell(e.projectName, e.orgName)));
+					tr.append(el('td', { className: 'muted mono' }, e.userEmail || '—'));
 					body.append(tr);
 				}
 			};
-			$("#err-refresh").addEventListener("click", () => loaders.errors());
+			$('#err-refresh').addEventListener('click', () => loaders.errors());
 
 			/* ---------- Helpers ---------- */
 			function emptyRow(cols, text) {
-				const tr = el("tr");
-				tr.append(el("td", { className: "empty", colSpan: cols }, text));
+				const tr = el('tr');
+				tr.append(el('td', { className: 'empty', colSpan: cols }, text));
 				return tr;
 			}
 			async function guard(fn) {
@@ -854,7 +915,7 @@
 			}
 			function handleError(err) {
 				if (err && err.unauthorized) {
-					showLogin("Session expired. Please sign in again.");
+					showLogin('Session expired. Please sign in again.');
 				} else {
 					console.error(err);
 				}
@@ -863,24 +924,24 @@
 			/* ---------- Boot ---------- */
 			async function boot() {
 				try {
-					const health = await fetch("/api/health").then((r) => r.json());
-					$("#mode-badge").textContent = health.mode;
+					const health = await fetch('/api/health').then((r) => r.json());
+					$('#mode-badge').textContent = health.mode;
 				} catch {}
 				showApp();
 				connectStream();
-				activateTab("overview");
+				activateTab('overview');
 			}
 
 			(async function init() {
 				if (!token) {
-					showLogin("");
+					showLogin('');
 					return;
 				}
 				try {
-					await api("/api/stats");
+					await api('/api/stats');
 					boot();
 				} catch (err) {
-					showLogin(err.unauthorized ? "" : "Could not reach the server.");
+					showLogin(err.unauthorized ? '' : 'Could not reach the server.');
 				}
 			})();
 		</script>

@@ -7,7 +7,9 @@ async function main(): Promise<void> {
 	// The back office is a nao cloud feature. Refuse to start in any other
 	// deploy mode so it can never leak in self-hosted/local deployments.
 	if (!isCloud) {
-		console.log(`[admin] nao back office is disabled (NAO_MODE=${adminConfig.naoMode}). It only runs when NAO_MODE=cloud.`);
+		console.log(
+			`[admin] nao back office is disabled (NAO_MODE=${adminConfig.naoMode}). It only runs when NAO_MODE=cloud.`,
+		);
 		return;
 	}
 
