@@ -33,6 +33,25 @@ class CreatedFile:
     content: str | None
 
 
+_PROMPTS_README = """# System prompts
+
+Override the system prompt nao uses on each bot surface by adding a markdown file
+here. When a file is present its content fully replaces the built-in product
+prompt for that surface; remove the file to fall back to the default.
+
+- `system.md` — applies to every surface (nao web Bot, Slack, Teams, …).
+- `slack.md` — Slack Bot only.
+- `teams.md` — Microsoft Teams Bot only.
+- `telegram.md` — Telegram Bot only.
+- `whatsapp.md` — WhatsApp Bot only.
+- `automation.md` — scheduled automations only.
+
+A surface-specific file (e.g. `slack.md`) takes precedence over `system.md`.
+These files are versioned with the rest of your context, so prompt changes are
+reviewable in pull requests just like `RULES.md`.
+"""
+
+
 def setup_project_name(
     force: bool = False,
     name: str | None = None,
@@ -112,11 +131,13 @@ def create_empty_structure(project_path: Path) -> tuple[list[str], list[CreatedF
         "agent/tools",
         "agent/mcps",
         "agent/skills",
+        "agent/prompts",
         "tests",
     ]
 
     FILES = [
         CreatedFile(path=Path("RULES.md"), content=None),
+        CreatedFile(path=Path("agent/prompts/README.md"), content=_PROMPTS_README),
         CreatedFile(path=Path(".naoignore"), content="templates/\n*.j2\ntests/\n"),
         CreatedFile(
             path=Path("tests/test_example.yml"),

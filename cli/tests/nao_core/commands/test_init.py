@@ -70,6 +70,7 @@ class TestCreateEmptyStructure:
             "agent/tools",
             "agent/mcps",
             "agent/skills",
+            "agent/prompts",
             "tests",
         ]
 
@@ -86,6 +87,16 @@ class TestCreateEmptyStructure:
         rules_file = tmp_path / "RULES.md"
         assert rules_file.exists()
         assert rules_file.is_file()
+
+    def test_creates_prompts_readme_file(self, tmp_path: Path):
+        """Creates agent/prompts/README.md documenting per-surface prompt overrides."""
+        folders, files = create_empty_structure(tmp_path)
+
+        readme = tmp_path / "agent" / "prompts" / "README.md"
+        assert readme.exists()
+        content = readme.read_text()
+        assert "system.md" in content
+        assert "slack.md" in content
 
     def test_creates_naoignore_file(self, tmp_path: Path):
         """Creates .naoignore file with ignored generated paths."""
