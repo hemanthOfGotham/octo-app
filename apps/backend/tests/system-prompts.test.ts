@@ -1,0 +1,77 @@
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('fs');
+
+import { getSystemPromptOverride } from '../src/agents/system-prompts';
+
+const mockExistsSync = vi.mocked(existsSync);
+const mockReadFileSync = vi.mocked(readFileSync);
+
+const ROOT = '/project';
+const promptPath = (filename: string) => join(ROOT, 'agent', 'prompts', filename);
+
+/** Makes only the listed prompt files "exist" with the given content. */
+function setupPromptFiles(files: Record<string, string>): void {
+	mockExistsSync.mockImplementation((path) => Object.keys(files).some((name) => path === promptPath(name)));
+	mockReadFileSync.mockImplementation((path) => {
+		const match = Object.entries(files).find(([name]) => path === promptPath(name));
+		if (!match) {
+			throw new Error(`Unexpected read: ${String(path)}`);
+		}
+		return match[1] as unknown as ReturnType<typeof readFileSync>;
+	});
+}
+
+describe('getSystemPromptOverride', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('returns undefined when no override files exist', () => {
+		mockExistsSync.mockReturnValue(false);
+		expect(getSystemPromptOverride(ROOT)).toBeUndefined();
+		expect(getSystemPromptOverride(ROOT, 'slack')).toBeUndefined();
+	});
+
+	it('uses system.md for the web Bot (no provider)', () => {
+		setupPromptFiles({ 'system.md': 'Web override' });
+		expect(getSystemPromptOverride(ROOT)).toBe('Web override');
+	});
+
+	it('does not use a surface file for the web Bot', () => {
+		setupPromptFiles({ 'slack.md': 'Slack override' });
+		expect(getSystemPromptOverride(ROOT)).toBeUndefined();
+	});
+
+	it('prefers the surface-specific file over system.md', () => {
+		setupPromptFiles({ 'system.md': 'Global override', 'slack.md': 'Slack override' });
+		expect(getSystemPromptOverride(ROOT, 'slack')).toBe('Slack override');
+	});
+
+	it('falls back to system.md when no surface-specific file exists', () => {
+		setupPromptFiles({ 'system.md': 'Global override' });
+		expect(getSystemPromptOverride(ROOT, 'slack')).toBe('Global override');
+		expect(getSystemPromptOverride(ROOT, 'teams')).toBe('Global override');
+		expect(getSystemPromptOverride(ROOT, 'automation')).toBe('Global override');
+	});
+
+	it('trims whitespace and ignores empty files', () => {
+		setupPromptFiles({ 'system.md': '   \n  Trimmed override \n', 'slack.md': '   \n  ' });
+		expect(getSystemPromptOverride(ROOT)).toBe('Trimmed override');
+		// slack.md is blank, so slack falls back to system.md
+		expect(getSystemPromptOverride(ROOT, 'slack')).toBe('Trimmed override');
+	});
+
+	it('returns undefined and logs when reading throws', () => {
+		mockExistsSync.mockImplementation((path) => path === promptPath('system.md'));
+		mockReadFileSync.mockImplementation(() => {
+			throw new Error('Permission denied');
+		});
+		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+		expect(getSystemPromptOverride(ROOT)).toBeUndefined();
+		expect(consoleSpy).toHaveBeenCalledWith('Error reading system prompt override system.md:', expect.any(Error));
+	});
+});

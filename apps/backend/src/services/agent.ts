@@ -20,6 +20,7 @@ import {
 import { z } from 'zod';
 
 import { LLM_PROVIDERS, ProviderModelResult } from '../agents/providers';
+import { getSystemPromptOverride } from '../agents/system-prompts';
 import { getTools } from '../agents/tools';
 import { createWebSearchTools } from '../agents/tools/web-search';
 import { getConnections, getTableColumnsContent, getUserRules } from '../agents/user-rules';
@@ -500,6 +501,11 @@ class AgentManager {
 
 	/** Builds the standard system prompt (instructions + user rules + memories + connections). */
 	private async _buildSystemPrompt(provider?: Provider, timezone?: string, chatUrl?: string): Promise<string> {
+		const promptOverride = getSystemPromptOverride(this._toolContext.projectFolder, provider);
+		if (promptOverride) {
+			return promptOverride;
+		}
+
 		const memories = await memoryService.safeGetUserMemories(this.chat.userId, this.chat.projectId, this.chat.id);
 		const userRules = getUserRules(this._toolContext.projectFolder);
 		const connections = getConnections(this._toolContext.projectFolder);
