@@ -380,7 +380,12 @@ export const ChartDisplay = memo(function ChartDisplay({
 						animationDuration={150}
 						animationEasing='linear'
 						allowEscapeViewBox={{ y: true, x: false }}
-						content={<ChartTooltipContent labelFormatter={(value) => labelize(value, dateFormat)} />}
+						content={
+							<ChartTooltipContent
+								hideTotal={chartType === 'combo'}
+								labelFormatter={(value) => labelize(value, dateFormat)}
+							/>
+						}
 					/>,
 					chartType !== 'pie' && (
 						<ChartLegend

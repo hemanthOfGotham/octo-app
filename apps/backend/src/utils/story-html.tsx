@@ -503,7 +503,7 @@ const TOOLTIP_SCRIPT_TEMPLATE = `
 					+'<span class="nao-tooltip-value">'+formatVal(val)+'</span>'
 					+'</div>';
 			});
-			if(numericValues.length>1){
+			if(numericValues.length>1&&cfg.chartType!=='combo'){
 				var total=numericValues.reduce(function(a,b){return a+b},0);
 				html+='<div class="nao-tooltip-total">'
 					+'<span class="nao-tooltip-name">Total</span>'

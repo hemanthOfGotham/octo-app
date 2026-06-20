@@ -107,6 +107,7 @@ function ChartTooltipContent({
 	color,
 	nameKey,
 	labelKey,
+	hideTotal = false,
 }: React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
 	React.ComponentProps<'div'> & {
 		hideLabel?: boolean;
@@ -114,6 +115,7 @@ function ChartTooltipContent({
 		indicator?: 'line' | 'dot' | 'dashed';
 		nameKey?: string;
 		labelKey?: string;
+		hideTotal?: boolean;
 	}) {
 	const { config } = useChart();
 
@@ -147,7 +149,7 @@ function ChartTooltipContent({
 	// Calculate total if there are multiple numeric values that can be summed
 	const visiblePayload = payload.filter((item) => item.type !== 'none');
 	const numericValues = visiblePayload.map((item) => item.value).filter((v): v is number => typeof v === 'number');
-	const showTotal = numericValues.length > 1;
+	const showTotal = !hideTotal && numericValues.length > 1;
 	const total = showTotal ? numericValues.reduce((sum, v) => sum + v, 0) : 0;
 
 	return (
