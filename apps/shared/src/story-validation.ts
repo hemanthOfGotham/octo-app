@@ -20,6 +20,7 @@ const VALID_CHART_TYPES = new Set([
 	'kpi_card',
 	'scatter',
 	'radar',
+	'combo',
 ]);
 
 const VALID_X_AXIS_TYPES = new Set(['date', 'number', 'category']);

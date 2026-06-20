@@ -129,8 +129,8 @@ export async function buildChartEmbedFromArtifact(
 	ctx: McpContext,
 	opts: { chatId: string | null; callLogId: string },
 ): Promise<{ payload: ChartToolPayload; sandboxChartHtml: string | null } | { keyError: ChartKeyError } | null> {
-	const { query_id, chart_type, x_axis_key, x_axis_type, series, title } = artifact;
-	const block = buildStoryChartBlock({ query_id, chart_type, x_axis_key, x_axis_type, series, title });
+	const { query_id, chart_type, x_axis_key, x_axis_type, series, y_axes, title } = artifact;
+	const block = buildStoryChartBlock({ query_id, chart_type, x_axis_key, x_axis_type, series, y_axes, title });
 
 	const queryData = await resolveChartQueryData({
 		queryId: query_id,
@@ -159,7 +159,14 @@ export async function buildChartEmbedFromArtifact(
 			chartEmbedId: id,
 			queryId: query_id,
 			projectId: ctx.projectId,
-			chartConfig: { chartType: chart_type, xAxisKey: x_axis_key, xAxisType: x_axis_type, series, title },
+			chartConfig: {
+				chartType: chart_type,
+				xAxisKey: x_axis_key,
+				xAxisType: x_axis_type,
+				series,
+				yAxes: y_axes,
+				title,
+			},
 			sourceChatId: effectiveChatId,
 		});
 		if (inserted) {

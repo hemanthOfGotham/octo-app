@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import type { UIMessage } from '@nao/backend/chat';
 import type { displayChart } from '@nao/shared/tools';
+import type { ParsedChartBlock } from '@nao/shared/story-segments';
 import { Button } from '@/components/ui/button';
 import { useOptionalAgentContext } from '@/contexts/agent.provider';
 import { useStoryEmbedData } from '@/contexts/story-embed-data';
@@ -10,15 +11,7 @@ import { ChartDisplay } from '@/components/tool-calls/display-chart';
 import { ChartConfigEditDialog } from '@/components/tool-calls/display-chart-edit-dialog';
 import { sortByDateKey } from '@/lib/charts.utils';
 
-interface ChartBlock {
-	queryId: string;
-	chartType: string;
-	xAxisKey: string;
-	xAxisType: string | null;
-	series: Array<{ data_key: string; color: string; label?: string }>;
-	title: string;
-	rawTag?: string;
-}
+type ChartBlock = ParsedChartBlock;
 
 export const StoryChartEmbed = memo(function StoryChartEmbed({ chart }: { chart: ChartBlock }) {
 	const agent = useOptionalAgentContext();
@@ -78,6 +71,7 @@ export const StoryChartEmbed = memo(function StoryChartEmbed({ chart }: { chart:
 				xAxisKey={chart.xAxisKey}
 				xAxisType={xAxisType}
 				series={chart.series}
+				yAxes={chart.yAxes}
 				title={chart.title}
 			/>
 		</StoryChartEmbedShell>
@@ -109,7 +103,10 @@ export function StoryChartEmbedShell({ chart, availableColumns, children }: Stor
 				data_key: s.data_key,
 				color: s.color || undefined,
 				label: s.label,
+				series_type: s.series_type,
+				y_axis: s.y_axis,
 			})),
+			y_axes: chart.yAxes,
 			title: chart.title,
 		}),
 		[chart],

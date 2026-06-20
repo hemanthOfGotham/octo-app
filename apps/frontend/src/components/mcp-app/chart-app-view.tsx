@@ -26,6 +26,8 @@ export const ChartAppView = memo(function ChartAppView({ config, data, naoUrl }:
 				data_key: s.data_key,
 				color: s.color ?? `var(--chart-${(i % 5) + 1})`,
 				label: s.label,
+				series_type: s.series_type,
+				y_axis: s.y_axis,
 			})),
 		[config.series],
 	);
@@ -54,6 +56,7 @@ export const ChartAppView = memo(function ChartAppView({ config, data, naoUrl }:
 					xAxisKey={config.xAxisKey}
 					xAxisType={xAxisType}
 					series={series}
+					yAxes={config.yAxes}
 					title={config.title}
 				/>
 			</div>

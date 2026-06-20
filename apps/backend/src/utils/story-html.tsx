@@ -329,6 +329,7 @@ function toChartConfig(chart: ParsedChartBlock) {
 		x_axis_key: chart.xAxisKey,
 		x_axis_type: chart.xAxisType as displayChart.XAxisType | null,
 		series: chart.series,
+		y_axes: chart.yAxes,
 		title: chart.title,
 	};
 }

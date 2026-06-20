@@ -10,6 +10,7 @@ export type McpChartEmbedStoredConfig = {
 	xAxisKey: displayChart.Input['x_axis_key'];
 	xAxisType: displayChart.Input['x_axis_type'];
 	series: displayChart.Input['series'];
+	yAxes?: displayChart.Input['y_axes'];
 	title: string;
 };
 

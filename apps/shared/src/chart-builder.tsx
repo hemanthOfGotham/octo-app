@@ -5,7 +5,9 @@ import {
 	Bar,
 	BarChart,
 	CartesianGrid,
+	ComposedChart,
 	Customized,
+	Line,
 	Pie,
 	PieChart,
 	PolarAngleAxis,
@@ -69,6 +71,7 @@ export interface BuildChartProps {
 	margin?: { top?: number; right?: number; bottom?: number; left?: number };
 	title?: string;
 	maxXAxisTicks?: number;
+	yAxes?: displayChart.YAxesConfig;
 }
 
 /**
@@ -88,6 +91,9 @@ export function buildChart(props: BuildChartProps) {
 	}
 	if (resolved.chartType === 'line' || resolved.chartType === 'area' || resolved.chartType === 'stacked_area') {
 		return buildAreaChart(resolved);
+	}
+	if (resolved.chartType === 'combo') {
+		return buildComboChart(resolved);
 	}
 	if (resolved.chartType === 'scatter') {
 		return buildScatterChart(resolved);
@@ -284,6 +290,139 @@ function buildAreaChart(props: ResolvedProps) {
 			))}
 		</AreaChart>
 	);
+}
+
+function buildComboChart(props: ResolvedProps) {
+	const {
+		data,
+		xAxisKey,
+		xAxisType,
+		series,
+		colorFor,
+		labelFormatter,
+		showGrid,
+		children,
+		margin,
+		xAxisInterval,
+		yAxes,
+	} = props;
+
+	const hasRightAxis = series.some((s) => s.y_axis === 'right');
+	const areaSeries = series.filter((s) => s.series_type === 'area');
+
+	return (
+		<ComposedChart data={data} accessibilityLayer margin={margin}>
+			{areaSeries.length > 0 && (
+				<defs>
+					{series.map((s, i) =>
+						s.series_type === 'area' ? (
+							<linearGradient key={s.data_key} id={`grad-combo-${i}`} x1='0' y1='0' x2='0' y2='1'>
+								<stop offset='0%' stopColor={colorFor(s.data_key, i)} stopOpacity={0.25} />
+								<stop offset='100%' stopColor={colorFor(s.data_key, i)} stopOpacity={0} />
+							</linearGradient>
+						) : null,
+					)}
+				</defs>
+			)}
+			{showGrid && <CartesianGrid horizontal vertical={false} strokeDasharray='3 3' />}
+			<YAxis
+				yAxisId='left'
+				tick={AXIS_TICK}
+				tickLine={false}
+				axisLine={false}
+				minTickGap={12}
+				tickFormatter={formatYAxisTick}
+				domain={resolveAxisDomain(yAxes?.left?.domain)}
+				label={axisLabel(yAxes?.left?.label, 'left')}
+			/>
+			{hasRightAxis && (
+				<YAxis
+					yAxisId='right'
+					orientation='right'
+					tick={AXIS_TICK}
+					tickLine={false}
+					axisLine={false}
+					minTickGap={12}
+					tickFormatter={formatYAxisTick}
+					domain={resolveAxisDomain(yAxes?.right?.domain)}
+					label={axisLabel(yAxes?.right?.label, 'right')}
+				/>
+			)}
+			<XAxis
+				dataKey={xAxisKey}
+				type={xAxisType}
+				domain={['dataMin', 'dataMax']}
+				tick={AXIS_TICK}
+				tickLine
+				tickMargin={10}
+				axisLine={false}
+				minTickGap={12}
+				interval={xAxisInterval}
+				tickFormatter={labelFormatter}
+			/>
+			{children}
+			{series.map((s, i) => {
+				const color = colorFor(s.data_key, i);
+				const yAxisId = s.y_axis === 'right' ? 'right' : 'left';
+				if (s.series_type === 'line') {
+					return (
+						<Line
+							key={s.data_key}
+							yAxisId={yAxisId}
+							dataKey={s.data_key}
+							type='monotone'
+							stroke={color}
+							strokeWidth={2}
+							dot={false}
+							isAnimationActive={false}
+						/>
+					);
+				}
+				if (s.series_type === 'area') {
+					return (
+						<Area
+							key={s.data_key}
+							yAxisId={yAxisId}
+							dataKey={s.data_key}
+							type='monotone'
+							stroke={color}
+							fill={`url(#grad-combo-${i})`}
+							isAnimationActive={false}
+						/>
+					);
+				}
+				return (
+					<Bar
+						key={s.data_key}
+						yAxisId={yAxisId}
+						dataKey={s.data_key}
+						fill={color}
+						radius={[4, 4, 0, 0]}
+						isAnimationActive={false}
+					/>
+				);
+			})}
+		</ComposedChart>
+	);
+}
+
+function resolveAxisDomain(domain: displayChart.YAxisDomain | undefined): [number, number] | undefined {
+	if (domain && domain !== 'auto') {
+		return [domain.min, domain.max];
+	}
+	return undefined;
+}
+
+function axisLabel(label: string | undefined, side: 'left' | 'right') {
+	if (!label) {
+		return undefined;
+	}
+	return {
+		value: label,
+		angle: -90,
+		position: side === 'left' ? ('insideLeft' as const) : ('insideRight' as const),
+		style: { textAnchor: 'middle' as const, fontSize: 12, fill: 'var(--muted-foreground, #6b7280)' },
+	};
 }
 
 function buildScatterChart(props: ResolvedProps) {

@@ -275,6 +275,7 @@ export const DisplayChartToolCall = ({
 				chartType={config.chart_type}
 				xAxisKey={config.x_axis_key}
 				series={config.series}
+				yAxes={config.y_axes}
 				xAxisType={config.x_axis_type === 'number' ? 'number' : 'category'}
 				title={config.title}
 			/>
@@ -289,6 +290,7 @@ export interface ChartDisplayProps {
 	xAxisType: 'number' | 'category';
 	xAxisLabelFormatter?: (value: string) => string;
 	series: displayChart.SeriesConfig[];
+	yAxes?: displayChart.YAxesConfig;
 	title?: string;
 	showGrid?: boolean;
 }
@@ -300,6 +302,7 @@ export const ChartDisplay = memo(function ChartDisplay({
 	xAxisType,
 	xAxisLabelFormatter,
 	series,
+	yAxes,
 	title,
 	showGrid = true,
 }: ChartDisplayProps) {
@@ -366,6 +369,7 @@ export const ChartDisplay = memo(function ChartDisplay({
 				xAxisKey,
 				xAxisType,
 				series: visibleSeries,
+				yAxes,
 				colorFor,
 				labelFormatter,
 				showGrid,
@@ -394,6 +398,7 @@ export const ChartDisplay = memo(function ChartDisplay({
 			xAxisKey,
 			xAxisType,
 			visibleSeries,
+			yAxes,
 			colorFor,
 			labelFormatter,
 			showGrid,

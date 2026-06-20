@@ -101,6 +101,14 @@ export function SystemPrompt({
 					desired (similar to "line"). Use "stacked_area" to show how multiple series compose a total over
 					time (e.g. revenue by payment method, users by plan) — requires 2+ series and pivoted data.
 				</ListItem>
+				<ListItem>
+					For display_chart chart_type: use "combo" to mix chart types and/or plot metrics on two Y-axes (e.g.
+					revenue as bars on the left axis vs. conversion rate as a line on the right axis). Set each series'
+					"series_type" ("bar", "line", or "area") and "y_axis" ("left" or "right"). A right axis is drawn
+					automatically when any series uses "y_axis": "right". Use the top-level "y_axes" object to label
+					each axis (e.g. y_axes.left.label, y_axes.right.label) and to fix a scale via "domain" ("auto" or{' '}
+					{'{ min, max }'}). Prefer "combo" with a right axis when comparing metrics on very different scales.
+				</ListItem>
 				{hasClickHouse && (
 					<ListItem>
 						When available, use indexes.md to see how the table is ordered and indexed (ORDER BY, PRIMARY

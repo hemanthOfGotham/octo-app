@@ -7,7 +7,8 @@ import { renderToString } from 'react-dom/server';
 import { createSvg, type LegendEntry, svgToPng } from '../utils/generate-chart';
 
 export interface RenderChartInput {
-	config: Pick<displayChart.Input, 'chart_type' | 'x_axis_key' | 'x_axis_type' | 'series' | 'title'>;
+	config: Pick<displayChart.Input, 'chart_type' | 'x_axis_key' | 'x_axis_type' | 'series' | 'title'> &
+		Partial<Pick<displayChart.Input, 'y_axes'>>;
 	data: Record<string, unknown>[];
 	width?: number;
 	height?: number;
@@ -42,6 +43,7 @@ export function renderChartToSvg(input: RenderChartInput): string {
 		xAxisKey: config.x_axis_key,
 		xAxisType: config.x_axis_type === 'number' ? 'number' : 'category',
 		series: config.series,
+		yAxes: config.y_axes,
 		colorFor,
 		labelFormatter,
 		showGrid: true,

@@ -1,9 +1,28 @@
+export interface ParsedChartSeries {
+	data_key: string;
+	color: string;
+	label?: string;
+	series_type?: 'bar' | 'line' | 'area';
+	y_axis?: 'left' | 'right';
+}
+
+export interface ParsedYAxisConfig {
+	label?: string;
+	domain?: 'auto' | { min: number; max: number };
+}
+
+export interface ParsedYAxesConfig {
+	left?: ParsedYAxisConfig;
+	right?: ParsedYAxisConfig;
+}
+
 export interface ParsedChartBlock {
 	queryId: string;
 	chartType: string;
 	xAxisKey: string;
 	xAxisType: string | null;
-	series: Array<{ data_key: string; color: string; label?: string }>;
+	series: ParsedChartSeries[];
+	yAxes?: ParsedYAxesConfig;
 	title: string;
 	/** The original `<chart ... />` tag this block was parsed from, when available. */
 	rawTag?: string;
@@ -60,8 +79,18 @@ export function parseChartBlock(attrString: string): ParsedChartBlock | null {
 		xAxisKey: attrs.x_axis_key,
 		xAxisType: attrs.x_axis_type || null,
 		series,
+		yAxes: attrs.y_axes ? (tryParseJsonObject(attrs.y_axes) as ParsedYAxesConfig | undefined) : undefined,
 		title: attrs.title || '',
 	};
+}
+
+function tryParseJsonObject(value: string): Record<string, unknown> | null {
+	try {
+		const parsed = JSON.parse(value);
+		return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+	} catch {
+		return null;
+	}
 }
 
 export function parseTableBlock(attrString: string): ParsedTableBlock | null {

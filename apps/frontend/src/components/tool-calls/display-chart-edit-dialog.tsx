@@ -20,6 +20,18 @@ const CHART_TYPE_OPTIONS: { value: displayChart.ChartType; label: string }[] = [
 	{ value: 'kpi_card', label: 'KPI card' },
 	{ value: 'scatter', label: 'Scatter' },
 	{ value: 'radar', label: 'Radar' },
+	{ value: 'combo', label: 'Combo (dual-axis)' },
+];
+
+const SERIES_TYPE_OPTIONS: { value: displayChart.SeriesType; label: string }[] = [
+	{ value: 'bar', label: 'Bar' },
+	{ value: 'line', label: 'Line' },
+	{ value: 'area', label: 'Area' },
+];
+
+const Y_AXIS_OPTIONS: { value: displayChart.YAxisSide; label: string }[] = [
+	{ value: 'left', label: 'Left axis' },
+	{ value: 'right', label: 'Right axis' },
 ];
 
 const X_AXIS_TYPE_OPTIONS: { value: NonNullable<displayChart.XAxisType> | 'auto'; label: string }[] = [
@@ -94,6 +106,18 @@ export function ChartConfigEditDialog({
 			...prev,
 			series: prev.series.length <= 1 ? prev.series : prev.series.filter((_, i) => i !== index),
 		}));
+	};
+
+	const isCombo = draft.chart_type === 'combo';
+
+	const updateYAxisLabel = (side: displayChart.YAxisSide, label: string) => {
+		setDraft((prev) => {
+			const nextSide = { ...prev.y_axes?.[side], label: label || undefined };
+			const hasValue = nextSide.label !== undefined || nextSide.domain !== undefined;
+			const nextYAxes = { ...prev.y_axes, [side]: hasValue ? nextSide : undefined };
+			const isEmpty = nextYAxes.left === undefined && nextYAxes.right === undefined;
+			return { ...prev, y_axes: isEmpty ? undefined : nextYAxes };
+		});
 	};
 
 	const addSeries = () => {
@@ -207,43 +231,87 @@ export function ChartConfigEditDialog({
 						</div>
 						<div className='flex flex-col gap-3'>
 							{draft.series.map((series, index) => (
-								<div
-									key={index}
-									className='grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center rounded-md'
-								>
-									<ColumnSelect
-										value={series.data_key}
-										columns={availableColumns.length > 0 ? availableColumns : [series.data_key]}
-										onChange={(value) => updateSeriesAt(index, { data_key: value })}
-									/>
-									<Input
-										value={series.label ?? ''}
-										onChange={(e) => updateSeriesAt(index, { label: e.target.value || undefined })}
-										placeholder='Label (optional)'
-										className='h-8 rounded-lg text-sm bg-panel'
-									/>
-									<input
-										type='color'
-										aria-label='Series color'
-										value={normalizeHexColor(series.color)}
-										onChange={(e) => updateSeriesAt(index, { color: e.target.value })}
-										className='h-8 w-8 cursor-pointer overflow-hidden rounded-lg border-none bg-transparent p-0 [&::-moz-color-swatch]:rounded-lg [&::-moz-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-none'
-									/>
-									<Button
-										type='button'
-										size='icon-sm'
-										variant='ghost-muted'
-										className='size-8'
-										onClick={() => removeSeriesAt(index)}
-										disabled={draft.series.length <= 1}
-										title='Remove series'
-									>
-										<Trash2 className='size-4' />
-									</Button>
+								<div key={index} className='flex flex-col gap-2 rounded-md'>
+									<div className='grid grid-cols-[1fr_1fr_auto_auto] gap-2 items-center'>
+										<ColumnSelect
+											value={series.data_key}
+											columns={availableColumns.length > 0 ? availableColumns : [series.data_key]}
+											onChange={(value) => updateSeriesAt(index, { data_key: value })}
+										/>
+										<Input
+											value={series.label ?? ''}
+											onChange={(e) =>
+												updateSeriesAt(index, { label: e.target.value || undefined })
+											}
+											placeholder='Label (optional)'
+											className='h-8 rounded-lg text-sm bg-panel'
+										/>
+										<input
+											type='color'
+											aria-label='Series color'
+											value={normalizeHexColor(series.color)}
+											onChange={(e) => updateSeriesAt(index, { color: e.target.value })}
+											className='h-8 w-8 cursor-pointer overflow-hidden rounded-lg border-none bg-transparent p-0 [&::-moz-color-swatch]:rounded-lg [&::-moz-color-swatch]:border-none [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-lg [&::-webkit-color-swatch]:border-none'
+										/>
+										<Button
+											type='button'
+											size='icon-sm'
+											variant='ghost-muted'
+											className='size-8'
+											onClick={() => removeSeriesAt(index)}
+											disabled={draft.series.length <= 1}
+											title='Remove series'
+										>
+											<Trash2 className='size-4' />
+										</Button>
+									</div>
+									{isCombo && (
+										<div className='grid grid-cols-2 gap-2'>
+											<EnumSelect
+												value={series.series_type ?? 'bar'}
+												options={SERIES_TYPE_OPTIONS}
+												onChange={(value) =>
+													updateSeriesAt(index, {
+														series_type: value as displayChart.SeriesType,
+													})
+												}
+											/>
+											<EnumSelect
+												value={series.y_axis ?? 'left'}
+												options={Y_AXIS_OPTIONS}
+												onChange={(value) =>
+													updateSeriesAt(index, { y_axis: value as displayChart.YAxisSide })
+												}
+											/>
+										</div>
+									)}
 								</div>
 							))}
 						</div>
 					</div>
+
+					{isCombo && (
+						<div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+							<div className='grid gap-2'>
+								<span className='text-sm font-semibold text-foreground'>Left axis label</span>
+								<Input
+									value={draft.y_axes?.left?.label ?? ''}
+									onChange={(e) => updateYAxisLabel('left', e.target.value)}
+									placeholder='Left axis label (optional)'
+									className='h-8 bg-panel'
+								/>
+							</div>
+							<div className='grid gap-2'>
+								<span className='text-sm font-semibold text-foreground'>Right axis label</span>
+								<Input
+									value={draft.y_axes?.right?.label ?? ''}
+									onChange={(e) => updateYAxisLabel('right', e.target.value)}
+									placeholder='Right axis label (optional)'
+									className='h-8 bg-panel'
+								/>
+							</div>
+						</div>
+					)}
 
 					{error && <p className='text-xs text-destructive'>{error}</p>}
 
@@ -341,6 +409,29 @@ function ColumnSelect({ value, columns, onChange }: ColumnSelectProps) {
 				{items.map((column) => (
 					<SelectItem key={column} value={column}>
 						{column}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
+	);
+}
+
+interface EnumSelectProps {
+	value: string;
+	options: { value: string; label: string }[];
+	onChange: (value: string) => void;
+}
+
+function EnumSelect({ value, options, onChange }: EnumSelectProps) {
+	return (
+		<Select value={value} onValueChange={onChange}>
+			<SelectTrigger className='w-full text-sm bg-panel [&_svg]:text-foreground! [&_svg]:opacity-100!'>
+				<SelectValue />
+			</SelectTrigger>
+			<SelectContent className='bg-panel [&_svg]:text-foreground! [&_svg]:opacity-100!'>
+				{options.map((option) => (
+					<SelectItem key={option.value} value={option.value}>
+						{option.label}
 					</SelectItem>
 				))}
 			</SelectContent>

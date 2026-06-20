@@ -68,6 +68,7 @@ const McpChartOutput = ({ chartBlock }: { chartBlock: string }) => {
 				xAxisKey={chart.xAxisKey}
 				xAxisType={chart.xAxisType === 'number' ? 'number' : 'category'}
 				series={chart.series}
+				yAxes={chart.yAxes}
 				title={chart.title}
 			/>
 		</div>
