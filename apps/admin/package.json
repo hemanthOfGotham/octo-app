@@ -1,0 +1,21 @@
+{
+	"name": "@nao/admin",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "bun --watch src/index.ts",
+		"start": "bun src/index.ts",
+		"lint": "tsc --noEmit && eslint",
+		"lint:fix": "eslint --fix"
+	},
+	"dependencies": {
+		"@nao/backend": "*",
+		"dotenv": "^17.2.3",
+		"drizzle-orm": "^0.45.1",
+		"fastify": "^5.6.2"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.3.5",
+		"@types/node": "^25.0.3"
+	}
+}
