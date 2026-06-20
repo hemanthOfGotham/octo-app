@@ -16,6 +16,7 @@ COPY package.json package-lock.json bun.lock ./
 COPY apps/frontend/package.json ./apps/frontend/
 COPY apps/backend/package.json ./apps/backend/
 COPY apps/shared/package.json ./apps/shared/
+COPY apps/admin/package.json ./apps/admin/
 
 # Single install for all workspaces. --ignore-scripts skips prepare (husky);
 # @vscode/ripgrep needs its postinstall to download the platform binary.
@@ -120,9 +121,10 @@ COPY --from=python-builder --chown=nao:nao /usr/local/bin/nao /usr/local/bin/nao
 COPY --from=deps --chown=nao:nao /app/package.json ./
 COPY --from=deps --chown=nao:nao /app/node_modules ./node_modules
 
-# Copy backend and shared source (no build needed — Bun runs TS directly)
+# Copy backend, shared and admin source (no build needed — Bun runs TS directly)
 COPY --chown=nao:nao apps/backend ./apps/backend
 COPY --chown=nao:nao apps/shared ./apps/shared
+COPY --chown=nao:nao apps/admin ./apps/admin
 
 # Lock down the license public key for production: strip the dev override
 # branch from apps/backend/src/services/license-public-key.ts so the
@@ -153,9 +155,11 @@ ENV APP_COMMIT=$APP_COMMIT
 ENV APP_BUILD_DATE=$APP_BUILD_DATE
 ENV NAO_DEFAULT_PROJECT_PATH=/app/example
 ENV NAO_CONTEXT_SOURCE=local
+ENV ADMIN_PORT=5006
 ENV DOCKER=1
 
-EXPOSE 5005
+# 5005 = chat server. 5006 = nao cloud back office (only started when NAO_MODE=cloud).
+EXPOSE 5005 5006
 
 # Use entrypoint script to initialize context before starting services
 ENTRYPOINT ["/entrypoint.sh"]

@@ -24,11 +24,20 @@ services:
             dockerfile: Dockerfile
         ports:
             - '${SERVER_PORT:-5005}:${SERVER_PORT:-5005}'
+            # Back office — only serves traffic when NAO_MODE=cloud is set.
+            - '${ADMIN_PORT:-5006}:${ADMIN_PORT:-5006}'
         environment:
             # =================================================================
             # Chat Port
             # =================================================================
             SERVER_PORT: ${SERVER_PORT:-5005}
+
+            # =================================================================
+            # Back office (nao cloud only)
+            # =================================================================
+            # NAO_MODE: cloud  # uncomment to enable the back office on ADMIN_PORT
+            ADMIN_PORT: ${ADMIN_PORT:-5006}
+            ADMIN_TOKEN: ${ADMIN_TOKEN:-}
 
             # =================================================================
             # Authentication & API Keys
