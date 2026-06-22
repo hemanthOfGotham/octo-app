@@ -147,16 +147,34 @@ function createSlackTools(
 		return {};
 	}
 
+	// Charts/stories accumulate across the run; track which ones were already
+	// uploaded so multiple thread replies don't re-attach the same files.
+	const uploadedArtifacts = new Set<string>();
+
 	return {
 		send_automation_slack_message: createTool({
 			description: getSlackToolDescription(config.channelId),
 			inputSchema: z.object({
 				text: z.string().min(1),
+				thread_id: z
+					.string()
+					.optional()
+					.describe(
+						'Reuse the `threadId` returned by a previous call to post this message inside that thread instead of the channel.',
+					),
 			}),
-			execute: async ({ text }, context: ToolContext) => {
-				const result = await slackService.postMessage(projectId, config.channelId, text, { chatId });
-				const attachments = await buildGeneratedArtifactAttachments(projectId, context);
+			execute: async ({ text, thread_id }, context: ToolContext) => {
+				const result = await slackService.postMessage(projectId, config.channelId, text, {
+					chatId,
+					threadId: thread_id,
+				});
+				const attachments = (await buildGeneratedArtifactAttachments(projectId, context)).filter(
+					(attachment) => !uploadedArtifacts.has(attachment.filename),
+				);
 				await slackService.uploadFiles(projectId, result.threadId, attachments.map(toSlackFileUpload));
+				for (const attachment of attachments) {
+					uploadedArtifacts.add(attachment.filename);
+				}
 				return { ok: true, ...result, attachments: attachments.map((attachment) => attachment.filename) };
 			},
 		}),
@@ -168,7 +186,12 @@ function getEmailToolDescription(): string {
 }
 
 function getSlackToolDescription(channelId: string): string {
-	return `Post a message in the Slack channel ${channelId}. Provide the markdown-friendly text to post. Use @slack-handle to mention a Slack user.`;
+	return [
+		`Post a message in the Slack channel ${channelId}. Provide the markdown-friendly text to post. Use @slack-handle to mention a Slack user.`,
+		'To avoid cluttering the channel, post a single short headline message first (no thread_id), then reply with the full report inside its thread by passing the returned threadId as thread_id.',
+		'The call returns a threadId; reuse it as thread_id for every follow-up message so they stay in the same thread.',
+		'Generated charts and stories are uploaded to the thread automatically.',
+	].join(' ');
 }
 
 type GeneratedArtifactAttachment = Omit<EmailAttachment, 'content'> & {

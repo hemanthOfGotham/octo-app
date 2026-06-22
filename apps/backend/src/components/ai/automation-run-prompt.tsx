@@ -40,6 +40,8 @@ function AutomationRunPrompt({ prompt, integrations, userEmail }: AutomationRunP
 			<Title>Outbound tools available for this run</Title>
 			<AutomationIntegrationsList integrations={integrations} />
 
+			{integrations.slack?.enabled ? <SlackThreadingGuidance /> : null}
+
 			<Title>Required behaviour</Title>
 			<List ordered>
 				<ListItem>
@@ -62,6 +64,34 @@ function AutomationRunPrompt({ prompt, integrations, userEmail }: AutomationRunP
 			<Title>Automation prompt</Title>
 			<Span>{prompt}</Span>
 		</Block>
+	);
+}
+
+function SlackThreadingGuidance() {
+	return (
+		<Fragment>
+			<Title>Slack posting structure</Title>
+			<Span>
+				To keep the channel uncluttered, do NOT post the whole report as one or more top-level channel messages.
+				Instead, structure the Slack delivery as a thread:
+			</Span>
+			<List ordered>
+				<ListItem>
+					Call <Code>send_automation_slack_message</Code> once with a short, descriptive headline only (e.g.
+					&quot;Weekly Commercial Performance Update Report: see thread&quot;) and no <Code>thread_id</Code>.
+					This becomes the single channel message and starts the thread.
+				</ListItem>
+				<ListItem>
+					Read the <Code>threadId</Code> returned by that call and post the full report by calling{' '}
+					<Code>send_automation_slack_message</Code> again with that value as <Code>thread_id</Code>. All
+					report content (and any follow-up parts) must go into the thread, never the channel.
+				</ListItem>
+				<ListItem>
+					Reuse the same <Code>thread_id</Code> for every additional message so the entire report stays in one
+					thread. Charts and stories are uploaded into the thread automatically.
+				</ListItem>
+			</List>
+		</Fragment>
 	);
 }
 
