@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FilePlus } from 'lucide-react';
 
 import { FileTree } from '@/components/settings/file-tree';
 import { FileViewer } from '@/components/settings/file-viewer';
@@ -17,6 +18,26 @@ export const Route = createFileRoute('/_sidebar-layout/settings/context-explorer
 
 function ContextExplorerPage() {
 	const [selectedPath, setSelectedPath] = useState<string | null>(null);
+	const queryClient = useQueryClient();
+
+	const createMutation = useMutation(
+		trpc.contextExplorer.createFile.mutationOptions({
+			onSuccess: async (_d, vars) => {
+				await queryClient.invalidateQueries(trpc.contextExplorer.getFileTree.queryOptions());
+				setSelectedPath(vars.path);
+			},
+			onError: (e) => alert(`Create failed: ${e.message}`),
+		}),
+	);
+
+	const newFile = () => {
+		const input = prompt(
+			'New file path (relative to context root).\nExamples:\n  agent/skills/my-skill.md\n  databases/notes.md',
+		);
+		if (!input) return;
+		const path = input.startsWith('/') ? input : '/' + input;
+		createMutation.mutate({ path, content: '' });
+	};
 
 	const fileTree = useQuery(trpc.contextExplorer.getFileTree.queryOptions());
 	const fileContent = useQuery({
@@ -32,7 +53,13 @@ function ContextExplorerPage() {
 				defaultLayout={{ tree: 1, viewer: 5 }}
 			>
 				<ResizablePanel id='tree' minSize={180}>
-					<div className='h-full overflow-hidden bg-card'>
+					<div className='h-full overflow-hidden bg-card flex flex-col'>
+						<div className='flex items-center justify-between px-3 py-2 border-b border-border shrink-0'>
+							<span className='text-xs font-medium text-muted-foreground'>Context files</span>
+							<Button variant='ghost' size='sm' onClick={newFile} title='New file'>
+								<FilePlus className='size-4' />
+							</Button>
+						</div>
 						{fileTree.isLoading ? (
 							<div className='flex items-center justify-center h-32'>
 								<Spinner />
@@ -63,6 +90,7 @@ function ContextExplorerPage() {
 							content={fileContent.data?.content}
 							isLoading={fileContent.isLoading && fileContent.fetchStatus !== 'idle'}
 							isError={fileContent.isError}
+							onDeleted={() => setSelectedPath(null)}
 						/>
 					</div>
 				</ResizablePanel>

@@ -1,15 +1,20 @@
+import { useEffect, useState } from 'react';
 import { Editor } from '@monaco-editor/react';
-import { File } from 'lucide-react';
+import { File, Save, Trash2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Monaco } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
+import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { useEditorTheme } from '@/hooks/use-editor-theme';
+import { trpc } from '@/main';
 
 interface FileViewerProps {
 	filePath: string | null;
 	content: string | undefined;
 	isLoading: boolean;
 	isError: boolean;
+	onDeleted?: (path: string) => void;
 }
 
 const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
@@ -69,36 +74,59 @@ function defineCustomThemes(monaco: Monaco) {
 	});
 }
 
-export function FileViewer({ filePath, content, isLoading, isError }: FileViewerProps) {
+export function FileViewer({ filePath, content, isLoading, isError, onDeleted }: FileViewerProps) {
 	const editorTheme = useEditorTheme();
 	const themeName = editorTheme === 'vs-dark' ? 'nao-dark' : 'nao-light';
+	const queryClient = useQueryClient();
+
+	// Local editable draft; reset whenever the loaded file/content changes.
+	const [draft, setDraft] = useState<string>(content ?? '');
+	useEffect(() => {
+		setDraft(content ?? '');
+	}, [content, filePath]);
+	const dirty = filePath != null && draft !== (content ?? '');
+
+	const [error, setError] = useState<string | null>(null);
+
+	const writeMutation = useMutation(
+		trpc.contextExplorer.writeFile.mutationOptions({
+			onSuccess: async () => {
+				setError(null);
+				if (filePath) {
+					await queryClient.invalidateQueries(trpc.contextExplorer.readFile.queryOptions({ path: filePath }));
+				}
+			},
+			onError: (e) => setError(`Save failed: ${e.message}`),
+		}),
+	);
+	const deleteMutation = useMutation(
+		trpc.contextExplorer.deleteFile.mutationOptions({
+			onSuccess: async () => {
+				setError(null);
+				await queryClient.invalidateQueries(trpc.contextExplorer.getFileTree.queryOptions());
+				if (filePath) onDeleted?.(filePath);
+			},
+			onError: (e) => setError(`Delete failed: ${e.message}`),
+		}),
+	);
+
+	const save = () => {
+		if (filePath && dirty) writeMutation.mutate({ path: filePath, content: draft });
+	};
 
 	const handleBeforeMount = (monaco: Monaco) => {
 		defineCustomThemes(monaco);
 	};
 
 	const handleMount = (editorInstance: editor.IStandaloneCodeEditor, monaco: Monaco) => {
-		const KeyMod = monaco.KeyMod;
-		const KeyCode = monaco.KeyCode;
-
-		editorInstance.addCommand(KeyMod.CtrlCmd | KeyCode.KeyK, () => {
-			window.dispatchEvent(
-				new KeyboardEvent('keydown', {
-					key: 'k',
-					code: 'KeyK',
-					metaKey: navigator.platform.includes('Mac'),
-					ctrlKey: !navigator.platform.includes('Mac'),
-					bubbles: true,
-				}),
-			);
-		});
+		editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => save());
 	};
 
 	if (!filePath) {
 		return (
 			<div className='flex flex-col items-center justify-center h-full text-muted-foreground gap-2'>
 				<File className='size-10 opacity-20' />
-				<p className='text-sm'>Select a file to view its contents</p>
+				<p className='text-sm'>Select a file to edit, or create a new one</p>
 			</div>
 		);
 	}
@@ -127,17 +155,41 @@ export function FileViewer({ filePath, content, isLoading, isError }: FileViewer
 			<div className='flex items-center gap-2 px-4 py-2 border-b border-border bg-muted/30 text-sm text-muted-foreground shrink-0'>
 				<File className='size-3.5' />
 				<span className='font-mono truncate'>{fileName}</span>
-				<span className='text-xs opacity-60 ml-auto truncate'>{filePath}</span>
+				{dirty && <span className='text-xs text-amber-500'>● unsaved</span>}
+				{error && <span className='text-xs text-red-500 truncate max-w-xs'>{error}</span>}
+				<span className='text-xs opacity-60 ml-2 truncate hidden md:inline'>{filePath}</span>
+				<div className='ml-auto flex items-center gap-2'>
+					<Button
+						size='sm'
+						onClick={save}
+						disabled={!dirty || writeMutation.isPending}
+					>
+						<Save className='size-3.5 mr-1' />
+						{writeMutation.isPending ? 'Saving…' : 'Save'}
+					</Button>
+					<Button
+						size='sm'
+						variant='outline'
+						onClick={() => {
+							if (filePath && confirm(`Delete ${fileName}?`)) deleteMutation.mutate({ path: filePath });
+						}}
+						disabled={deleteMutation.isPending}
+					>
+						<Trash2 className='size-3.5' />
+					</Button>
+				</div>
 			</div>
 			<div className='flex-1 min-h-0'>
 				<Editor
-					value={content ?? ''}
+					path={filePath}
+					value={draft}
+					onChange={(v) => setDraft(v ?? '')}
 					language={language}
 					theme={themeName}
 					beforeMount={handleBeforeMount}
 					onMount={handleMount}
 					options={{
-						readOnly: true,
+						readOnly: false,
 						minimap: { enabled: false },
 						scrollBeyondLastLine: false,
 						fontSize: 13,
@@ -145,7 +197,6 @@ export function FileViewer({ filePath, content, isLoading, isError }: FileViewer
 						renderLineHighlight: 'line',
 						padding: { top: 8, bottom: 8 },
 						wordWrap: 'on',
-						domReadOnly: true,
 					}}
 				/>
 			</div>

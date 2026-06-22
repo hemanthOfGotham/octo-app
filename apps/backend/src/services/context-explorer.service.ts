@@ -20,6 +20,34 @@ export async function readFileContent(filePath: string, projectFolder: string): 
 	return fs.readFile(realPath, 'utf-8');
 }
 
+const MAX_WRITE_SIZE = 1024 * 1024; // 1 MB
+
+/** Write (overwrite) a context file. Creates parent dirs as needed. */
+export async function writeFileContent(filePath: string, projectFolder: string, content: string): Promise<void> {
+	if (Buffer.byteLength(content, 'utf-8') > MAX_WRITE_SIZE) {
+		throw new Error('File is too large to save (max 1 MB)');
+	}
+	const realPath = resolveAndValidatePath(filePath, projectFolder);
+	await fs.mkdir(path.dirname(realPath), { recursive: true });
+	await fs.writeFile(realPath, content, 'utf-8');
+}
+
+/** Create a new context file (fails if it already exists). */
+export async function createFileEntry(filePath: string, projectFolder: string, content = ''): Promise<void> {
+	const realPath = resolveAndValidatePath(filePath, projectFolder);
+	await fs.mkdir(path.dirname(realPath), { recursive: true });
+	await fs.writeFile(realPath, content, { encoding: 'utf-8', flag: 'wx' });
+}
+
+/** Delete a context file. */
+export async function deleteFileEntry(filePath: string, projectFolder: string): Promise<void> {
+	const realPath = resolveAndValidatePath(filePath, projectFolder);
+	if (realPath === path.resolve(projectFolder)) {
+		throw new Error('Refusing to delete the project root');
+	}
+	await fs.rm(realPath, { recursive: false });
+}
+
 async function readDirectoryRecursive(dirPath: string, projectFolder: string): Promise<FileTreeEntry[]> {
 	const dirEntries = await fs.readdir(dirPath, { withFileTypes: true });
 
