@@ -78,7 +78,7 @@ function NoProjectCloudState({ isAdmin }: { isAdmin: boolean }) {
 					title='Import from GitHub'
 					description={
 						isGithubConnected
-							? 'Select a repository to import as a nao project.'
+							? 'Select a repository to import as an Octo project.'
 							: 'Connect your GitHub account to browse and import repositories.'
 					}
 					icon={<Github className='size-4' />}

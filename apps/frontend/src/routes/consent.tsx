@@ -99,8 +99,8 @@ function Consent() {
 						<h2 className='text-lg font-semibold'>{accepted ? 'Access granted' : 'Access denied'}</h2>
 						<p className='text-sm text-muted-foreground'>
 							{accepted
-								? `You have authorized ${clientLabel} to access your nao account. You can close this window.`
-								: `You have denied ${clientLabel} access to your nao account. You can close this window.`}
+								? `You have authorized ${clientLabel} to access your Octo account. You can close this window.`
+								: `You have denied ${clientLabel} access to your Octo account. You can close this window.`}
 						</p>
 					</div>
 				</div>
@@ -113,7 +113,7 @@ function Consent() {
 			<Card className='bg-background'>
 				<CardHeader>
 					<CardTitle>Authorize {clientLabel}</CardTitle>
-					<CardDescription>{clientLabel} is requesting access to your nao account.</CardDescription>
+					<CardDescription>{clientLabel} is requesting access to your Octo account.</CardDescription>
 				</CardHeader>
 				<CardContent className='space-y-3'>
 					{requestedScopes.length > 0 && (

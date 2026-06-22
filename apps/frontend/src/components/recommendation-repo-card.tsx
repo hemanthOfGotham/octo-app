@@ -93,7 +93,7 @@ export function RecommendationRepoCard() {
 			<SettingsCard
 				title='Repository'
 				icon={<Github className='size-4' />}
-				description='Connect GitHub so nao can draft pull requests that improve your context.'
+				description='Connect GitHub so Octo can draft pull requests that improve your context.'
 			>
 				<Button size='sm' asChild>
 					<a href={`/api/github/connect?returnTo=${RETURN_TO}`}>
@@ -110,7 +110,7 @@ export function RecommendationRepoCard() {
 			<SettingsCard
 				title='Repository'
 				icon={<Github className='size-4' />}
-				description='This project is not linked to a GitHub repository. Select the repository that holds your context files so nao can open pull requests against it.'
+				description='This project is not linked to a GitHub repository. Select the repository that holds your context files so Octo can open pull requests against it.'
 			>
 				<div className='flex flex-col gap-3'>
 					<Button size='sm' onClick={() => setPickerOpen(true)} className='self-start'>

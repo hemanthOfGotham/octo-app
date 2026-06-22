@@ -31,7 +31,7 @@ export function SettingsProjectMemory({ isAdmin }: SettingsProjectMemoryProps) {
 	return (
 		<SettingsCard
 			title='Memory'
-			description='Memories enable nao to remember preferences and facts about team members.'
+			description='Memories enable Octo to remember preferences and facts about team members.'
 			divide
 		>
 			<SettingsControlRow

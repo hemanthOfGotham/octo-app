@@ -28,7 +28,7 @@ export function NewsletterSubscribeDialog({ open, onOpenChange }: NewsletterSubs
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Subscribe to the nao newsletter</DialogTitle>
+					<DialogTitle>Subscribe to the Octo newsletter</DialogTitle>
 					<DialogDescription>
 						Get product updates, release notes, and practical analytics agent tips in your inbox.
 					</DialogDescription>

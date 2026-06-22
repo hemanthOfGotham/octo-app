@@ -109,7 +109,7 @@ export function SettingsMemories() {
 			<SettingsCard
 				title='Memory'
 				titleSize='lg'
-				description='Memories enables nao to learn about you and your preferences over time.'
+				description='Memories enables Octo to learn about you and your preferences over time.'
 				divide
 			>
 				<SettingsControlRow

@@ -113,7 +113,7 @@ function GeneralPage() {
 					description='Adjust how much detail is shown for tool calls.'
 					control={<ToolCallDensitySlider value={toolCallDensity} onValueChange={setToolCallDensity} />}
 				/>
-				<SettingsControlRow label='Theme' description='Choose how nao looks.' control={<ThemeSelector />} />
+				<SettingsControlRow label='Theme' description='Choose how Octo looks.' control={<ThemeSelector />} />
 				<SettingsControlRow
 					label='Newsletter'
 					description='Get product updates, release notes, and analytics agent tips.'

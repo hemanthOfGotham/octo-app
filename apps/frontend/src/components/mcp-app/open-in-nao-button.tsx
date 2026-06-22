@@ -9,10 +9,10 @@ interface OpenInNaoButtonProps {
 
 export function OpenInNaoButton({ url }: OpenInNaoButtonProps) {
 	return (
-		<Button variant='outline' size='sm' className='gap-1.5' asChild title='Open in nao'>
+		<Button variant='outline' size='sm' className='gap-1.5' asChild title='Open in Octo'>
 			<a href={url} target='_blank' rel='noopener noreferrer' onClick={(e) => openLinkViaHost(e, url)}>
 				<ExternalLink className='size-3.5' />
-				<span className='hidden sm:inline'>Open in nao</span>
+				<span className='hidden sm:inline'>Open in Octo</span>
 			</a>
 		</Button>
 	);

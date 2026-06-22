@@ -98,7 +98,7 @@ export function GitHubRepoPicker({ open, onOpenChange }: GitHubRepoPickerProps) 
 							<Github className='size-5' />
 							Import from GitHub
 						</DialogTitle>
-						<DialogDescription>Select a repository to import as a nao project.</DialogDescription>
+						<DialogDescription>Select a repository to import as an Octo project.</DialogDescription>
 					</DialogHeader>
 
 					<GithubRepoList

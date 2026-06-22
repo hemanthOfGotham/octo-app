@@ -207,7 +207,7 @@ export function SlackConfigSection({ isAdmin }: SlackConfigSectionProps) {
 			{transportMode === 'socket' && (
 				<SettingsCard
 					title='Socket Mode'
-					description='nao maintains an outbound WebSocket connection to Slack — no public webhook URL is required.'
+					description='Octo maintains an outbound WebSocket connection to Slack — no public webhook URL is required.'
 				>
 					<p className='text-xs text-muted-foreground'>
 						Make sure Socket Mode is enabled in your Slack app settings and that the App-Level Token has the{' '}
@@ -221,7 +221,7 @@ export function SlackConfigSection({ isAdmin }: SlackConfigSectionProps) {
 					<SettingsControlRow
 						id='slack-reply-only-when-mentioned'
 						label='Reply only when mentioned'
-						description='When enabled, nao reads thread context but only answers messages that tag the bot.'
+						description='When enabled, Octo reads thread context but only answers messages that tag the bot.'
 						control={
 							<Switch
 								id='slack-reply-only-when-mentioned'
@@ -335,7 +335,7 @@ function AutoCreateUsersCard({ enabled: initialEnabled, domains: initialDomains 
 	return (
 		<SettingsCard
 			title='Auto-create users from Slack'
-			description='Automatically provision a nao account for senders whose email domain is allowed.'
+			description='Automatically provision an Octo account for senders whose email domain is allowed.'
 		>
 			<SettingsControlRow
 				id='slack-auto-create-users'

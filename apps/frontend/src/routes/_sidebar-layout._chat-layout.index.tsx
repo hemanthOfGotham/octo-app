@@ -179,7 +179,7 @@ function HomePage() {
 										src={logoSrc}
 										alt=''
 										aria-hidden
-										className='pointer-events-none absolute -top-60 left-1/2 -translate-x-1/2 w-full max-w-2xl select-none -z-10'
+										className='pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-full max-w-xs opacity-[0.06] select-none -z-10'
 									/>
 									<ChatInput />
 									<SavedPromptSuggestions />
