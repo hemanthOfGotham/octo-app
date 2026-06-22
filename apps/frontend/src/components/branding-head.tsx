@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 
 import { brandingAssetUrl, useBranding } from '@/hooks/use-branding';
 
-const DEFAULT_TITLE = 'nao — Chat with your data';
-const DEFAULT_FAVICON = '/favicon.ico';
+const DEFAULT_TITLE = 'Octo — Chat with your data';
+const DEFAULT_FAVICON = '/fello-icon.svg';
 
 /**
  * Sync the browser tab (title + favicon) with the active white-label branding.
