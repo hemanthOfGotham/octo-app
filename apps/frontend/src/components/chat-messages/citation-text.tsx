@@ -5,7 +5,16 @@ import { CITATION_TAG_REGEX } from '@nao/shared';
 
 import { CitationPopover } from '@/components/citation-popover';
 import { MarkdownTable } from '@/components/chat-messages/markdown-table';
+import { HtmlArtifact } from '@/components/html-artifact';
 import { markdownPlugins } from '@/lib/markdown';
+
+function CodeRenderer({ className, children, inline }: any) {
+	const lang = /language-(\w+)/.exec(className || '')?.[1];
+	if (!inline && (lang === 'html' || lang === 'htm')) {
+		return <HtmlArtifact html={String(children ?? '')} />;
+	}
+	return <code className={className}>{children}</code>;
+}
 
 const CLOBBER_PREFIX = 'user-content-';
 
@@ -23,6 +32,7 @@ export const AssistantTextWithCitation = memo(({ text, isStreaming }: { text: st
 				plugins={markdownPlugins}
 				components={{
 					table: ({ node, className }: any) => <MarkdownTable node={node} className={className} />,
+					code: CodeRenderer,
 				}}
 			>
 				{strippedText}
@@ -39,7 +49,8 @@ export const AssistantTextWithCitation = memo(({ text, isStreaming }: { text: st
 			literalTagContent={['citation-number']}
 			components={{
 				table: ({ node, className }: any) => <MarkdownTable node={node} className={className} />,
-				'citation-number': ({ id, column, children }: any) => {
+				code: CodeRenderer,
+					'citation-number': ({ id, column, children }: any) => {
 					return (
 						<span className='inline-block align-baseline mx-1'>
 							<CitationPopover

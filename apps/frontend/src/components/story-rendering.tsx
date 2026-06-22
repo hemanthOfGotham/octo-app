@@ -3,12 +3,10 @@ import { Fragment, memo, useMemo } from 'react';
 import { Streamdown } from 'streamdown';
 import type { ParsedChartBlock, ParsedTableBlock, Segment } from '@nao/shared/story-segments';
 
-import { MarkdownTable } from '@/components/chat-messages/markdown-table';
 import { markdownPlugins } from '@/lib/markdown';
+import { sharedMarkdownComponents } from '@/lib/markdown-components';
 
-const markdownComponents = {
-	table: ({ node, className }: any) => <MarkdownTable node={node} className={className} />,
-};
+const markdownComponents = sharedMarkdownComponents;
 
 interface SegmentRendererProps {
 	segments: Segment[];
