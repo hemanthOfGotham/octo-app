@@ -20,12 +20,8 @@ COPY apps/shared/package.json ./apps/shared/
 # Single install for all workspaces. --ignore-scripts skips prepare (husky);
 # @vscode/ripgrep needs its postinstall to download the platform binary.
 # GITHUB_TOKEN is injected via BuildKit secret to avoid baking it into layers.
-RUN --mount=type=cache,target=/root/.bun/install/cache \
-    --mount=type=secret,id=GITHUB_TOKEN \
-    GITHUB_TOKEN="$(cat /run/secrets/GITHUB_TOKEN 2>/dev/null || true)" \
-    bun install --ignore-scripts \
-    && GITHUB_TOKEN="$(cat /run/secrets/GITHUB_TOKEN 2>/dev/null || true)" \
-    cd node_modules/@vscode/ripgrep && npm run postinstall
+RUN bun install --ignore-scripts \
+    && cd node_modules/@vscode/ripgrep && npm run postinstall
 
 # =============================================================================
 # STAGE 3: Frontend builder
@@ -70,8 +66,7 @@ RUN if [ -n "$NAO_CLI_VERSION" ]; then \
         echo "Set nao-core version to $NAO_CLI_VERSION"; \
     fi
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install --system '.[all]'
+RUN uv pip install --system '.[all]'
 
 # =============================================================================
 # STAGE 5: Runtime image
@@ -123,12 +118,6 @@ COPY --from=deps --chown=nao:nao /app/node_modules ./node_modules
 # Copy backend and shared source (no build needed — Bun runs TS directly)
 COPY --chown=nao:nao apps/backend ./apps/backend
 COPY --chown=nao:nao apps/shared ./apps/shared
-
-# Lock down the license public key for production: strip the dev override
-# branch from apps/backend/src/services/license-public-key.ts so the
-# NAO_LICENSE_PUBLIC_KEY env var is a no-op in production images.
-RUN --mount=type=bind,source=docker/lock-license-key.mjs,target=/tmp/lock-license-key.mjs \
-    node /tmp/lock-license-key.mjs apps/backend/src/services/license-public-key.ts
 
 # Copy frontend build output
 COPY --from=frontend-builder --chown=nao:nao /app/apps/frontend/dist ./apps/frontend/dist
