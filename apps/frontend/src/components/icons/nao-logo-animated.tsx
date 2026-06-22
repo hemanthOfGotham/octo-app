@@ -131,7 +131,7 @@ export default function NaoLogoAnimated({
 	height = 65,
 	durationSeconds = 1.617,
 	loop = true,
-	title = 'nao',
+	title = 'Octo',
 }: NaoLogoAnimatedProps) {
 	const reducedMotion = usePrefersReducedMotion();
 	const dur = `${durationSeconds}s`;

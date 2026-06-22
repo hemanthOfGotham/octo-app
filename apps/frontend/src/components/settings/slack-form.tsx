@@ -22,7 +22,7 @@ export interface SlackFormProps {
 }
 
 function buildSlackManifest(webhookUrl: string, mentionName: string, transportMode: SlackTransportMode) {
-	const name = mentionName.trim() || 'nao';
+	const name = mentionName.trim() || 'Octo';
 	const isSocket = transportMode === 'socket';
 	return {
 		display_information: {
@@ -84,7 +84,7 @@ function buildManifestUrl(webhookUrl: string, mentionName: string, transportMode
 }
 
 export function SlackForm({ webhookUrl, hasProjectConfig, onSubmit, onCancel, isPending }: SlackFormProps) {
-	const [mentionName, setMentionName] = useState('nao');
+	const [mentionName, setMentionName] = useState('Octo');
 	const [transportMode, setTransportMode] = useState<SlackTransportMode>('webhook');
 
 	const form = useForm({
@@ -175,7 +175,7 @@ export function SlackForm({ webhookUrl, hasProjectConfig, onSubmit, onCancel, is
 						type='text'
 						value={mentionName}
 						onChange={(e) => setMentionName(e.target.value)}
-						placeholder='nao'
+						placeholder='Octo'
 						className='text-xs h-8'
 					/>
 					<p className='text-[11px] text-muted-foreground'>

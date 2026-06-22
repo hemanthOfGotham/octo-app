@@ -22,12 +22,12 @@ export function buildTeamsManifest(appId: string, redirectUrl: string) {
 		version: '1.0.0',
 		id: appId,
 		developer: {
-			name: 'Nao',
+			name: 'Octo',
 			websiteUrl: 'https://getnao.io/',
 			privacyUrl: 'https://getnao.io/privacy',
 			termsOfUseUrl: 'https://getnao.io/terms',
 		},
-		name: { short: 'nao', full: 'nao' },
+		name: { short: 'Octo', full: 'Octo' },
 		description: {
 			short: 'Analytics agent for data queries',
 			full: 'Analytics agent for data queries, providing insights and visualizations based on your data.',
