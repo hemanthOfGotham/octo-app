@@ -5,16 +5,8 @@ import { CITATION_TAG_REGEX } from '@nao/shared';
 
 import { CitationPopover } from '@/components/citation-popover';
 import { MarkdownTable } from '@/components/chat-messages/markdown-table';
-import { HtmlArtifact } from '@/components/html-artifact';
 import { markdownPlugins } from '@/lib/markdown';
-
-function CodeRenderer({ className, children, inline }: any) {
-	const lang = /language-(\w+)/.exec(className || '')?.[1];
-	if (!inline && (lang === 'html' || lang === 'htm')) {
-		return <HtmlArtifact html={String(children ?? '')} />;
-	}
-	return <code className={className}>{children}</code>;
-}
+import { CodeRenderer } from '@/lib/markdown-components';
 
 const CLOBBER_PREFIX = 'user-content-';
 
