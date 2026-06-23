@@ -8,6 +8,15 @@ import { sharedMarkdownComponents } from '@/lib/markdown-components';
 
 const markdownComponents = sharedMarkdownComponents;
 
+// Safety net: a story is native markdown + Nao tags — strip stray <style>/<script>
+// blocks an agent might leak (they'd otherwise show as raw text).
+function stripStrayHtml(md: string): string {
+	return md
+		.replace(/<style[\s\S]*?<\/style>/gi, '')
+		.replace(/<script[\s\S]*?<\/script>/gi, '')
+		.replace(/<!DOCTYPE[^>]*>/gi, '');
+}
+
 interface SegmentRendererProps {
 	segments: Segment[];
 	versionKey?: string | number;
@@ -34,7 +43,7 @@ export const SegmentList = memo(function SegmentList({
 								plugins={markdownPlugins}
 								components={markdownComponents}
 							>
-								{segment.content}
+								{stripStrayHtml(segment.content)}
 							</Streamdown>
 						);
 					case 'chart':
@@ -77,7 +86,7 @@ const StoryGrid = memo(function StoryGrid({
 					<div key={i} className='min-w-0'>
 						{segment.type === 'markdown' ? (
 							<Streamdown mode='static' plugins={markdownPlugins} components={markdownComponents}>
-								{segment.content}
+								{stripStrayHtml(segment.content)}
 							</Streamdown>
 						) : segment.type === 'chart' ? (
 							renderChart(segment.chart, i)
